@@ -1,6 +1,6 @@
 # Omni-Channel Billing & Payment Service
 
-**Owner:** Kumudu | **Port:** `3006` | **Database:** `billing_payment_db`
+| **Port:** `3006` | **Database:** `billing_payment_db`
 **GitHub repo:** `OmniChannelServiceHub-SLT/Omni-billing-payment-service`
 
 Restructured to match the team's agreed convention (`Omni-usage-management-service`):
