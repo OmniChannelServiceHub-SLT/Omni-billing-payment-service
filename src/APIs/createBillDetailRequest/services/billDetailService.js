@@ -1,17 +1,38 @@
-// Row #50 in Omni-Channel-API-Mapping-By-Service.xlsx ("Billing and Payment Service" sheet)
-// Legacy source: [AccountOMNI] "BillDetailRequest" (GET)
-const { BillDetail } = require('../../../models/TMF678_BillingPayment');
+// src/APIs/createBillDetailRequest/services/billDetailService.js
 
+const {
+  BillDetail,
+} = require('../../../models/TMF678_BillingPayment');
+
+/**
+ * Retrieve bill details using telephone number and account number.
+ *
+ * Row #50 in Omni-Channel-API-Mapping-By-Service.xlsx
+ * Legacy API: AccountOMNI/BillDetailRequest
+ * TMF API: TMF678 Customer Bill Management v4
+ */
 async function getBillDetail(telephoneNo, accountNo) {
-  const record = await BillDetail.findOne({ telephoneNo, accountNo });
-  if (!record) return null;
+  const record = await BillDetail.findOne({
+    telephoneNo,
+    accountNo,
+  }).lean();
 
-  // Matches real dataBundle shape from API_Params_SLTOMNI_V2_0_1.xlsx sheet "14"
+  if (!record) {
+    return null;
+  }
+
   return {
-    listofbillingInquiryType: record.listofbillingInquiryType,
-    listofProductDetail: record.listofProductDetail,
-    myPackageInfo: record.myPackageInfo,
+    listofbillingInquiryType:
+      record.listofbillingInquiryType || [],
+
+    listofProductDetail:
+      record.listofProductDetail || [],
+
+    myPackageInfo:
+      record.myPackageInfo || {},
   };
 }
 
-module.exports = { getBillDetail };
+module.exports = {
+  getBillDetail,
+};
