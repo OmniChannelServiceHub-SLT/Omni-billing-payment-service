@@ -23,5 +23,26 @@ router.get(
   auth,
   controller.createBillDetailRequest
 );
+router.get(
+  '/customerBill',
+  auth,
+  controller.listCustomerBills
+);
+
+router.get(
+  '/customerBill/:id',
+  auth,
+  controller.getCustomerBillById
+);
+/**
+ * Update a TMF678 CustomerBill.
+ *
+ * PATCH /customerBill/:id
+ */
+router.patch(
+  '/customerBill/:id',
+  auth,
+  controller.updateCustomerBill
+);
 
 module.exports = router;
