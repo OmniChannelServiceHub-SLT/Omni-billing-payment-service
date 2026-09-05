@@ -9,43 +9,75 @@ const service = require(
 );
 
 /**
- * Bill Detail Request
+ * Select the requested CustomerBill fields.
  *
- * Row #50 in Omni-Channel-API-Mapping-By-Service.xlsx
- * Legacy API: AccountOMNI/BillDetailRequest
- * TMF API: TMF678 Customer Bill Management v4
+ * TMF filtering keeps id and href as standard identifying fields.
+ */
+function selectCustomerBillFields(customerBill, fields) {
+  if (!fields) {
+    return customerBill;
+  }
+
+  const selected = {
+    id: customerBill.id,
+    href: customerBill.href,
+  };
+
+  fields
+    .split(',')
+    .map((field) => field.trim())
+    .filter(Boolean)
+    .forEach((field) => {
+      if (
+        field !== 'id' &&
+        field !== 'href' &&
+        Object.prototype.hasOwnProperty.call(
+          customerBill,
+          field
+        )
+      ) {
+        selected[field] = customerBill[field];
+      }
+    });
+
+  return selected;
+}
+
+/**
+ * Existing Bill Detail Request endpoint.
+ *
+ * GET /bill-detail
  */
 async function createBillDetailRequest(req, res) {
   try {
     const { telephoneNo, accountNo } = req.query;
 
-    // Validate required query parameters
     if (!telephoneNo || !accountNo) {
       return failure(res, {
-        message: 'telephoneNo and accountNo are required.',
+        message:
+          'telephoneNo and accountNo are required.',
         errorCode: 'E400',
         status: 400,
       });
     }
 
-    // Find bill details from Billing database
     const dataBundle = await service.getBillDetail(
       telephoneNo,
       accountNo
     );
 
-    // No matching bill
     if (!dataBundle) {
       return failure(res, {
-        message: `No bill found for accountNo '${accountNo}'.`,
+        message:
+          `No bill found for accountNo '${accountNo}'.`,
         errorCode: 'E404',
         status: 404,
       });
     }
 
-    // BillDetail is a GET request, therefore return 200
     return success(res, {
-      message: 'Bill details retrieved successfully.',
+      message:
+        'Bill details retrieved successfully.',
       dataBundle,
       status: 200,
     });
@@ -67,6 +99,139 @@ async function createBillDetailRequest(req, res) {
   }
 }
 
+/**
+ * Retrieve a list of CustomerBill resources.
+ *
+ * Supports:
+ * GET /customerBill
+ * GET /customerBill?fields=href
+ * GET /customerBill?fields=id
+ * GET /customerBill?id=<id>
+ */
+async function listCustomerBills(req, res) {
+  try {
+    const customerBills =
+      await service.getCustomerBills(req.query.id);
+
+    const response = customerBills.map(
+      (customerBill) =>
+        selectCustomerBillFields(
+          customerBill,
+          req.query.fields
+        )
+    );
+
+    return res.status(200).json(response);
+  } catch (error) {
+    console.error(
+      '[CustomerBill] Failed to retrieve bills:',
+      error.message
+    );
+
+    return res.status(500).json({
+      code: '500',
+      reason: 'Internal Server Error',
+      message:
+        'Failed to retrieve customer bills.',
+    });
+  }
+}
+
+/**
+ * Retrieve one CustomerBill resource by ID.
+ *
+ * GET /customerBill/:id
+ */
+async function getCustomerBillById(req, res) {
+  try {
+    const customerBill =
+      await service.getCustomerBillById(
+        req.params.id
+      );
+
+    if (!customerBill) {
+      return res.status(404).json({
+        code: '404',
+        reason: 'Not Found',
+        message:
+          `CustomerBill '${req.params.id}' was not found.`,
+      });
+    }
+
+    const response = selectCustomerBillFields(
+      customerBill,
+      req.query.fields
+    );
+
+    return res.status(200).json(response);
+  } catch (error) {
+    console.error(
+      '[CustomerBill] Failed to retrieve bill:',
+      error.message
+    );
+
+    return res.status(500).json({
+      code: '500',
+      reason: 'Internal Server Error',
+      message:
+        'Failed to retrieve the customer bill.',
+    });
+  }
+}
+/**
+ * Update a CustomerBill resource.
+ *
+ * PATCH /customerBill/:id
+ */
+async function updateCustomerBill(req, res) {
+  try {
+    const { state } = req.body;
+
+    if (
+      typeof state !== 'string' ||
+      !state.trim()
+    ) {
+      return res.status(400).json({
+        code: '400',
+        reason: 'Bad Request',
+        message:
+          'A valid state value is required.',
+      });
+    }
+
+    const customerBill =
+      await service.updateCustomerBillState(
+        req.params.id,
+        state.trim()
+      );
+
+    if (!customerBill) {
+      return res.status(404).json({
+        code: '404',
+        reason: 'Not Found',
+        message:
+          `CustomerBill '${req.params.id}' was not found.`,
+      });
+    }
+
+    return res.status(200).json(customerBill);
+  } catch (error) {
+    console.error(
+      '[CustomerBill] Failed to update bill:',
+      error.message
+    );
+
+    return res.status(500).json({
+      code: '500',
+      reason: 'Internal Server Error',
+      message:
+        'Failed to update the customer bill.',
+    });
+  }
+}
 module.exports = {
   createBillDetailRequest,
+  listCustomerBills,
+  getCustomerBillById,
+  updateCustomerBill,
 };
