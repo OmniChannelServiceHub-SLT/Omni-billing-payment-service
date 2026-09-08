@@ -1,46 +1,27 @@
 // src/APIs/createBillDetailRequest/controllers/billDetailController.js
 
-const { success, failure } = require(
-  '../../../middleware/response.util'
-);
+const {
+  failure,
+} = require('../../../middleware/response.util');
 
 const service = require(
   '../services/billDetailService'
 );
 
+const mapper = require(
+  '../mappers/billDetailMapper'
+);
+
 /**
- * Select the requested CustomerBill fields.
- *
- * TMF filtering keeps id and href as standard identifying fields.
+ * Check whether the client requested the
+ * original SLTOMNI response format.
  */
-function selectCustomerBillFields(customerBill, fields) {
-  if (!fields) {
-    return customerBill;
-  }
-
-  const selected = {
-    id: customerBill.id,
-    href: customerBill.href,
-  };
-
-  fields
-    .split(',')
-    .map((field) => field.trim())
-    .filter(Boolean)
-    .forEach((field) => {
-      if (
-        field !== 'id' &&
-        field !== 'href' &&
-        Object.prototype.hasOwnProperty.call(
-          customerBill,
-          field
-        )
-      ) {
-        selected[field] = customerBill[field];
-      }
-    });
-
-  return selected;
+function isLegacyResponse(req) {
+  return String(
+    req.headers['x-response-format'] || ''
+  )
+    .trim()
+    .toLowerCase() === 'legacy';
 }
 
 /**
@@ -61,12 +42,13 @@ async function createBillDetailRequest(req, res) {
       });
     }
 
-    const dataBundle = await service.getBillDetail(
-      telephoneNo,
-      accountNo
-    );
+    const billDetailRecord =
+      await service.getBillDetail(
+        telephoneNo,
+        accountNo
+      );
 
-    if (!dataBundle) {
+    if (!billDetailRecord) {
       return failure(res, {
         message:
           `No bill found for accountNo '${accountNo}'.`,
@@ -75,12 +57,39 @@ async function createBillDetailRequest(req, res) {
       });
     }
 
-    return success(res, {
-      message:
-        'Bill details retrieved successfully.',
-      dataBundle,
-      status: 200,
-    });
+    /*
+     * Original response from
+     * API_Params_SLTOMNI_V2_0_1.xlsx sheet "14".
+     */
+    if (isLegacyResponse(req)) {
+      return res.status(200).json({
+        isSuccess: true,
+        errorMessege: null,
+        exceptionDetail: null,
+
+        dataBundle:
+          mapper.mapToLegacyResponse(
+            billDetailRecord
+          ),
+
+        errorShow: null,
+        errorCode: null,
+      });
+    }
+
+    /*
+     * Default TMF678 response.
+     * CTK requests must not include
+     * x-response-format: legacy.
+     */
+    const customerBill =
+      mapper.mapToCustomerBill(
+        billDetailRecord
+      );
+
+    return res.status(200).json([
+      customerBill,
+    ]);
   } catch (error) {
     console.error(
       '[BillDetail] Failed to retrieve bill details:',
@@ -102,7 +111,6 @@ async function createBillDetailRequest(req, res) {
 /**
  * Retrieve a list of CustomerBill resources.
  *
- * Supports:
  * GET /customerBill
  * GET /customerBill?fields=href
  * GET /customerBill?fields=id
@@ -110,16 +118,20 @@ async function createBillDetailRequest(req, res) {
  */
 async function listCustomerBills(req, res) {
   try {
-    const customerBills =
-      await service.getCustomerBills(req.query.id);
+    const records =
+      await service.getCustomerBills(
+        req.query.id
+      );
 
-    const response = customerBills.map(
-      (customerBill) =>
-        selectCustomerBillFields(
-          customerBill,
-          req.query.fields
-        )
-    );
+    const response = records.map((record) => {
+      const customerBill =
+        mapper.mapToCustomerBill(record);
+
+      return mapper.selectCustomerBillFields(
+        customerBill,
+        req.query.fields
+      );
+    });
 
     return res.status(200).json(response);
   } catch (error) {
@@ -144,12 +156,12 @@ async function listCustomerBills(req, res) {
  */
 async function getCustomerBillById(req, res) {
   try {
-    const customerBill =
+    const record =
       await service.getCustomerBillById(
         req.params.id
       );
 
-    if (!customerBill) {
+    if (!record) {
       return res.status(404).json({
         code: '404',
         reason: 'Not Found',
@@ -158,10 +170,14 @@ async function getCustomerBillById(req, res) {
       });
     }
 
-    const response = selectCustomerBillFields(
-      customerBill,
-      req.query.fields
-    );
+    const customerBill =
+      mapper.mapToCustomerBill(record);
+
+    const response =
+      mapper.selectCustomerBillFields(
+        customerBill,
+        req.query.fields
+      );
 
     return res.status(200).json(response);
   } catch (error) {
@@ -178,6 +194,7 @@ async function getCustomerBillById(req, res) {
     });
   }
 }
+
 /**
  * Update a CustomerBill resource.
  *
@@ -199,13 +216,13 @@ async function updateCustomerBill(req, res) {
       });
     }
 
-    const customerBill =
+    const updatedRecord =
       await service.updateCustomerBillState(
         req.params.id,
         state.trim()
       );
 
-    if (!customerBill) {
+    if (!updatedRecord) {
       return res.status(404).json({
         code: '404',
         reason: 'Not Found',
@@ -214,7 +231,14 @@ async function updateCustomerBill(req, res) {
       });
     }
 
-    return res.status(200).json(customerBill);
+    const customerBill =
+      mapper.mapToCustomerBill(
+        updatedRecord
+      );
+
+    return res
+      .status(200)
+      .json(customerBill);
   } catch (error) {
     console.error(
       '[CustomerBill] Failed to update bill:',
@@ -229,6 +253,7 @@ async function updateCustomerBill(req, res) {
     });
   }
 }
+
 module.exports = {
   createBillDetailRequest,
   listCustomerBills,
