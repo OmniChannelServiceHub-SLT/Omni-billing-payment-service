@@ -1,17 +1,89 @@
-// Row #50 in Omni-Channel-API-Mapping-By-Service.xlsx ("Billing and Payment Service" sheet)
-// Legacy source: [AccountOMNI] "BillDetailRequest" (GET)
-const { BillDetail } = require('../../../models/TMF678_BillingPayment');
+// src/APIs/createBillDetailRequest/services/billDetailService.js
 
-async function getBillDetail(telephoneNo, accountNo) {
-  const record = await BillDetail.findOne({ telephoneNo, accountNo });
-  if (!record) return null;
+const mongoose = require('mongoose');
 
-  // Matches real dataBundle shape from API_Params_SLTOMNI_V2_0_1.xlsx sheet "14"
-  return {
-    listofbillingInquiryType: record.listofbillingInquiryType,
-    listofProductDetail: record.listofProductDetail,
-    myPackageInfo: record.myPackageInfo,
-  };
+const {
+  BillDetail,
+} = require('../../../models/TMF678_BillingPayment');
+
+/**
+ * Retrieve one bill using telephone number
+ * and account number.
+ */
+async function getBillDetail(
+  telephoneNo,
+  accountNo
+) {
+  return BillDetail.findOne({
+    telephoneNo,
+    accountNo,
+  }).lean();
 }
 
-module.exports = { getBillDetail };
+/**
+ * Retrieve CustomerBill database records.
+ *
+ * Supports:
+ * GET /customerBill
+ * GET /customerBill?id=<id>
+ */
+async function getCustomerBills(id) {
+  const filter = {};
+
+  if (id) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return [];
+    }
+
+    filter._id = id;
+  }
+
+  return BillDetail.find(filter)
+    .sort({
+      createdAt: -1,
+    })
+    .lean();
+}
+
+/**
+ * Retrieve one CustomerBill record by ID.
+ */
+async function getCustomerBillById(id) {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return null;
+  }
+
+  return BillDetail.findById(id).lean();
+}
+
+/**
+ * Update the state of a CustomerBill record.
+ */
+async function updateCustomerBillState(
+  id,
+  state
+) {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return null;
+  }
+
+  return BillDetail.findByIdAndUpdate(
+    id,
+    {
+      $set: {
+        state,
+      },
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  ).lean();
+}
+
+module.exports = {
+  getBillDetail,
+  getCustomerBills,
+  getCustomerBillById,
+  updateCustomerBillState,
+};

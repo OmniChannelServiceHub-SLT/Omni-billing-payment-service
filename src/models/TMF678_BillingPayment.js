@@ -1,25 +1,20 @@
 // src/models/TMF678_BillingPayment.js
 //
-// One consolidated model file for the whole Billing & Payment Service,
-// matching the convention used in Omni-usage-management-service
-// (models/TMF635_UsageManagement.js).
+// Consolidated model file for the Billing & Payment Service.
 //
-// This service covers TWO TM Forum APIs:
-//   - TMF678 Customer Bill Management  (BillDetail, BillHistory)
-//   - TMF676 Payment Management        (BillPayment)
-// All schemas for both live here, since the team convention is one model
-// file per SERVICE, not per TMF number.
+// TM Forum APIs:
+// - TMF678 Customer Bill Management
+// - TMF676 Payment Management
 //
-// Field names/shapes below are taken directly from the REAL sample
-// responses in API_Params_SLTOMNI_V2_0_1.xlsx (sheets "14", "17", "28"),
-// per the team leader's instruction to pull as much as possible from that
-// response Excel rather than inventing shapes.
+// Legacy response fields are based on the sample responses in
+// API_Params_SLTOMNI_V2_0_1.xlsx.
 
 const mongoose = require('mongoose');
 
-/* ---------------------------------------------------------------------- */
-/* TMF678 - createBillDetailRequest (row 50, sheet "14")                   */
-/* ---------------------------------------------------------------------- */
+/* ------------------------------------------------------------------ */
+/* TMF678 - Bill Detail Request                                       */
+/* Row 50 / Response sheet 14                                        */
+/* ------------------------------------------------------------------ */
 
 const BillingInquirySchema = new mongoose.Schema(
   {
@@ -30,7 +25,9 @@ const BillingInquirySchema = new mongoose.Schema(
     lastPaymentAmount: String,
     outstandingBalance: String,
   },
-  { _id: false }
+  {
+    _id: false,
+  }
 );
 
 const ProductDetailSchema = new mongoose.Schema(
@@ -45,9 +42,13 @@ const ProductDetailSchema = new mongoose.Schema(
     peoPckg: String,
     peoStatus: String,
     peoType: String,
-    subcriberID: String, // spelled this way in the real response - kept as-is
+
+    // This spelling is used in the original response.
+    subcriberID: String,
   },
-  { _id: false }
+  {
+    _id: false,
+  }
 );
 
 const UsageDetailSchema = new mongoose.Schema(
@@ -60,38 +61,95 @@ const UsageDetailSchema = new mongoose.Schema(
     volume_unit: String,
     expiry_date: String,
   },
-  { _id: false }
+  {
+    _id: false,
+  }
 );
 
 const MyPackageInfoSchema = new mongoose.Schema(
   {
     package_name: String,
-    package_summary: { type: String, default: null },
-    usageDetails: [UsageDetailSchema],
+
+    package_summary: {
+      type: String,
+      default: null,
+    },
+
+    usageDetails: [
+      UsageDetailSchema,
+    ],
   },
-  { _id: false }
+  {
+    _id: false,
+  }
 );
 
 const BillDetailSchema = new mongoose.Schema(
   {
-    telephoneNo: { type: String, required: true, trim: true },
-    accountNo: { type: String, required: true, trim: true },
-    listofbillingInquiryType: [BillingInquirySchema],
-    listofProductDetail: [ProductDetailSchema],
+    telephoneNo: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    accountNo: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    /*
+     * TMF678 CustomerBill state.
+     *
+     * This field supports the CTK PATCH operation:
+     * PATCH /customerBill/:id
+     */
+    state: {
+      type: String,
+      default: 'generated',
+      trim: true,
+    },
+
+    listofbillingInquiryType: [
+      BillingInquirySchema,
+    ],
+
+    listofProductDetail: [
+      ProductDetailSchema,
+    ],
+
     myPackageInfo: MyPackageInfoSchema,
   },
-  { timestamps: true, versionKey: false }
+  {
+    timestamps: true,
+    versionKey: false,
+  }
 );
-BillDetailSchema.index({ telephoneNo: 1, accountNo: 1 });
 
-/* ---------------------------------------------------------------------- */
-/* TMF678 - createBillHistoryRequest (row 56, sheet "17")                  */
-/* ---------------------------------------------------------------------- */
+BillDetailSchema.index({
+  telephoneNo: 1,
+  accountNo: 1,
+});
+
+/* ------------------------------------------------------------------ */
+/* TMF678 - Bill History Request                                      */
+/* Row 56 / Response sheet 17                                        */
+/* ------------------------------------------------------------------ */
 
 const BillHistoryItemSchema = new mongoose.Schema(
   {
-    telephoneNo: { type: String, required: true, trim: true },
-    accountNumber: { type: String, required: true, trim: true },
+    telephoneNo: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    accountNumber: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
     invoiceNumber: String,
     version: String,
     billType: String,
@@ -112,18 +170,37 @@ const BillHistoryItemSchema = new mongoose.Schema(
     balanceOutstanding: String,
     accountId: String,
   },
-  { timestamps: true, versionKey: false }
+  {
+    timestamps: true,
+    versionKey: false,
+  }
 );
-BillHistoryItemSchema.index({ telephoneNo: 1, accountNumber: 1, actualBillDate: -1 });
 
-/* ---------------------------------------------------------------------- */
-/* TMF676 - createBillPaymentRequest (row 58, sheet "28")                  */
-/* ---------------------------------------------------------------------- */
+BillHistoryItemSchema.index({
+  telephoneNo: 1,
+  accountNumber: 1,
+  actualBillDate: -1,
+});
+
+/* ------------------------------------------------------------------ */
+/* TMF676 - Bill Payment Request                                      */
+/* Row 58 / Response sheet 28                                        */
+/* ------------------------------------------------------------------ */
 
 const BillPaymentSchema = new mongoose.Schema(
   {
-    telephoneNo: { type: String, required: true, trim: true },
-    accountNo: { type: String, required: true, trim: true },
+    telephoneNo: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    accountNo: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
     billAmount: String,
     lastBillDate: String,
     paymentDueDate: String,
@@ -131,8 +208,12 @@ const BillPaymentSchema = new mongoose.Schema(
     lastPaymentAmount: String,
     outstandingBalance: String,
   },
-  { timestamps: true, versionKey: false }
+  {
+    timestamps: true,
+    versionKey: false,
+  }
 );
+BillHistoryRequestV2_Kumudu
 /* ---------------------------------------------------------------------- */
 /* TMF678 - createBillHistoryRequestV2 (row A90, sheet "90")              */
 /* ---------------------------------------------------------------------- */
@@ -171,6 +252,16 @@ BillHistoryV2ItemSchema.index({
 });
 BillPaymentSchema.index({ telephoneNo: 1, accountNo: 1 });
 
+BillPaymentSchema.index({
+  telephoneNo: 1,
+  accountNo: 1,
+});
+
+/* ------------------------------------------------------------------ */
+/* Model exports                                                      */
+/* ------------------------------------------------------------------ */
+dev
+
 module.exports = {
   BillDetail: mongoose.model(
     'BillDetail',
@@ -182,11 +273,13 @@ module.exports = {
     BillHistoryItemSchema
   ),
 
+BillHistoryRequestV2_Kumudu
   BillHistoryV2Item: mongoose.model(
     'BillHistoryV2Item',
     BillHistoryV2ItemSchema
   ),
 
+dev
   BillPayment: mongoose.model(
     'BillPayment',
     BillPaymentSchema
