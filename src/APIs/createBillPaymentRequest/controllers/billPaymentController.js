@@ -1,29 +1,91 @@
-// Row #58 in Omni-Channel-API-Mapping-By-Service.xlsx ("Billing and Payment Service" sheet)
-// Legacy source: [AccountOMNI] "BillPaymentRequest" (GET)
-// Proposed TMF-Aligned Method Name: createBillPaymentRequest
-// NOTE: despite the "create" verb, the source API is a GET (payment lookup),
-// so this returns billing/payment summary data, not a new payment.
-const { success, failure } = require('../../../middleware/response.util');
-const service = require('../services/billPaymentService');
+// src/APIs/createBillPaymentRequest/controllers/billPaymentController.js
 
-async function createBillPaymentRequest(req, res) {
+const {
+  failure,
+} = require('../../../middleware/response.util');
+
+const service = require(
+  '../services/billPaymentService'
+);
+
+const mapper = require(
+  '../mappers/billPaymentMapper'
+);
+
+/**
+ * GET /bill-payment
+ *
+ * Default response: TMF676 Payment
+ * x-response-format: legacy: Excel sheet 28 response
+ */
+async function createBillPaymentRequest(
+  req,
+  res
+) {
   try {
     const { telephoneNo, accountNo } = req.query;
 
     if (!telephoneNo || !accountNo) {
-      return failure(res, { message: 'telephoneNo and accountNo are required.', errorCode: 'E400', status: 400 });
+      return failure(res, {
+        message:
+          'telephoneNo and accountNo are required.',
+        errorCode: 'E400',
+        status: 400,
+      });
     }
 
-    const dataBundle = await service.getBillPayment(telephoneNo, accountNo);
+    const record = await service.getBillPayment(
+      telephoneNo,
+      accountNo
+    );
 
-    if (!dataBundle) {
-      return failure(res, { message: `No payment/billing record found for accountNo '${accountNo}'`, errorCode: 'E404', status: 404 });
+    if (!record) {
+      return failure(res, {
+        message:
+          `No payment/billing record found for accountNo '${accountNo}'.`,
+        errorCode: 'E404',
+        status: 404,
+      });
     }
 
-    return success(res, { message: 'createBillPaymentRequest OK', dataBundle });
-  } catch (err) {
-    return failure(res, { message: err.message, errorCode: 'E500', status: 500 });
+    const responseFormat = (
+      req.get('x-response-format') || ''
+    ).toLowerCase();
+
+    if (responseFormat === 'legacy') {
+      return res.status(200).json({
+        isSuccess: true,
+        errorMessege: null,
+        exceptionDetail: null,
+        dataBundle:
+          mapper.toLegacyDataBundle(record),
+        errorShow: null,
+        errorCode: null,
+      });
+    }
+
+    return res
+      .status(200)
+      .json(mapper.toTmfPayment(record));
+  } catch (error) {
+    console.error(
+      '[BillPayment] Failed to retrieve payment:',
+      error.message
+    );
+
+    return failure(res, {
+      message:
+        'Failed to retrieve payment information.',
+      errorCode: 'E500',
+      exceptionDetail:
+        process.env.NODE_ENV === 'production'
+          ? null
+          : error.message,
+      status: 500,
+    });
   }
 }
 
-module.exports = { createBillPaymentRequest };
+module.exports = {
+  createBillPaymentRequest,
+};
