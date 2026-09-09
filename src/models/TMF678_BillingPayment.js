@@ -256,7 +256,44 @@ BillPaymentSchema.index({
   telephoneNo: 1,
   accountNo: 1,
 });
+/* ------------------------------------------------------------------ */
+/* TMF678 - createEBillStatusRequest (row A22, sheet "22")            */
+/* ------------------------------------------------------------------ */
 
+const EBillStatusSchema = new mongoose.Schema(
+  {
+    accountNo: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    tpNo: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    mobileno: {
+      type: String,
+      default: null,
+    },
+
+    emailaddress: {
+      type: String,
+      default: null,
+    },
+  },
+  {
+    timestamps: true,
+    versionKey: false,
+  }
+);
+
+EBillStatusSchema.index({
+  accountNo: 1,
+  tpNo: 1,
+});
 /* ------------------------------------------------------------------ */
 /* Model exports                                                      */
 /* ------------------------------------------------------------------ */
@@ -280,5 +317,10 @@ module.exports = {
   BillPayment: mongoose.model(
     'BillPayment',
     BillPaymentSchema
+  ),
+
+  EBillStatus: mongoose.model(
+    'EBillStatus',
+    EBillStatusSchema
   ),
 };
