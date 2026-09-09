@@ -105,8 +105,12 @@ console.log(
 // ---------------------------------------------------------
 
 app.use('/tmf-api/customerBillManagement/v4', router);
+// API Gateway forwards Customer Bill Management using v1 paths.
+app.use('/tmf-api/customerBillManagement/v1', router);
 
 app.use('/tmf-api/paymentManagement/v4', router);
+// API Gateway forwards Payment Management using v1 paths.
+app.use('/tmf-api/paymentManagement/v1', router);
 
 // ---------------------------------------------------------
 // Optional legacy/internal compatibility route

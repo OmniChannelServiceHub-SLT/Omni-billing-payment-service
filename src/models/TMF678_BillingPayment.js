@@ -213,7 +213,7 @@ const BillPaymentSchema = new mongoose.Schema(
     versionKey: false,
   }
 );
-BillHistoryRequestV2_Kumudu
+
 /* ---------------------------------------------------------------------- */
 /* TMF678 - createBillHistoryRequestV2 (row A90, sheet "90")              */
 /* ---------------------------------------------------------------------- */
@@ -250,7 +250,7 @@ BillHistoryV2ItemSchema.index({
   accountNo: 1,
   billMonth: -1,
 });
-BillPaymentSchema.index({ telephoneNo: 1, accountNo: 1 });
+
 
 BillPaymentSchema.index({
   telephoneNo: 1,
@@ -260,7 +260,6 @@ BillPaymentSchema.index({
 /* ------------------------------------------------------------------ */
 /* Model exports                                                      */
 /* ------------------------------------------------------------------ */
-dev
 
 module.exports = {
   BillDetail: mongoose.model(
@@ -273,13 +272,11 @@ module.exports = {
     BillHistoryItemSchema
   ),
 
-BillHistoryRequestV2_Kumudu
   BillHistoryV2Item: mongoose.model(
     'BillHistoryV2Item',
     BillHistoryV2ItemSchema
   ),
 
-dev
   BillPayment: mongoose.model(
     'BillPayment',
     BillPaymentSchema
