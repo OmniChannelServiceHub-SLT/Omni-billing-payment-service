@@ -133,10 +133,62 @@ const BillPaymentSchema = new mongoose.Schema(
   },
   { timestamps: true, versionKey: false }
 );
+/* ---------------------------------------------------------------------- */
+/* TMF678 - createBillHistoryRequestV2 (row A90, sheet "90")              */
+/* ---------------------------------------------------------------------- */
+
+const BillHistoryV2ItemSchema = new mongoose.Schema(
+  {
+    telephoneNo: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    accountNo: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    billMonth: String,
+    billValue: String,
+    payments: String,
+    outstanding: String,
+    eBillAvailability: String,
+    billCode: String,
+  },
+  {
+    timestamps: true,
+    versionKey: false,
+  }
+);
+
+BillHistoryV2ItemSchema.index({
+  telephoneNo: 1,
+  accountNo: 1,
+  billMonth: -1,
+});
 BillPaymentSchema.index({ telephoneNo: 1, accountNo: 1 });
 
 module.exports = {
-  BillDetail: mongoose.model('BillDetail', BillDetailSchema),
-  BillHistoryItem: mongoose.model('BillHistoryItem', BillHistoryItemSchema),
-  BillPayment: mongoose.model('BillPayment', BillPaymentSchema),
+  BillDetail: mongoose.model(
+    'BillDetail',
+    BillDetailSchema
+  ),
+
+  BillHistoryItem: mongoose.model(
+    'BillHistoryItem',
+    BillHistoryItemSchema
+  ),
+
+  BillHistoryV2Item: mongoose.model(
+    'BillHistoryV2Item',
+    BillHistoryV2ItemSchema
+  ),
+
+  BillPayment: mongoose.model(
+    'BillPayment',
+    BillPaymentSchema
+  ),
 };
