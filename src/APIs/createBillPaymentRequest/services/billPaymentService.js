@@ -1,24 +1,29 @@
-// Row #58 in Omni-Channel-API-Mapping-By-Service.xlsx ("Billing and Payment Service" sheet)
-// Legacy source: [AccountOMNI] "BillPaymentRequest" (GET)
-const { BillPayment } = require('../../../models/TMF678_BillingPayment');
+// src/APIs/createBillPaymentRequest/services/billPaymentService.js
 
-async function getBillPayment(telephoneNo, accountNo) {
-  const record = await BillPayment.findOne({ telephoneNo, accountNo });
-  if (!record) return null;
+const {
+  BillPayment,
+} = require('../../../models/TMF678_BillingPayment');
 
-  // Matches real dataBundle shape from API_Params_SLTOMNI_V2_0_1.xlsx sheet "28"
-  return {
-    listofbillingInquiryType: [
-      {
-        billAmount: record.billAmount,
-        lastBillDate: record.lastBillDate,
-        paymentDueDate: record.paymentDueDate,
-        lastPaymentDate: record.lastPaymentDate,
-        lastPaymentAmount: record.lastPaymentAmount,
-        outstandingBalance: record.outstandingBalance,
-      },
-    ],
-  };
+/**
+ * Retrieve the raw billing/payment database record.
+ * Response formatting is handled by the mapper.
+ */
+async function getBillPayment(
+  telephoneNo,
+  accountNo
+) {
+  const record = await BillPayment.findOne({
+    telephoneNo,
+    accountNo,
+  }).lean();
+
+  if (!record) {
+    return null;
+  }
+
+  return record;
 }
 
-module.exports = { getBillPayment };
+module.exports = {
+  getBillPayment,
+};
