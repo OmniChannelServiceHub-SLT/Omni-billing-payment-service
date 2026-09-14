@@ -327,6 +327,64 @@ SMSServiceStatusSchema.index({
   accountNo: 1,
   tpNo: 1,
 });
+/* ------------------------------------------------------------------ */
+/* eBill Check User Exist - Excel sheet "24"                          */
+/* ------------------------------------------------------------------ */
+
+const EBillUserCheckSchema = new mongoose.Schema(
+  {
+    accountNo: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    tpNo: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    econtact: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    econtactType: {
+      type: String,
+      required: true,
+      trim: true,
+      uppercase: true,
+    },
+
+    userexist: {
+      type: String,
+      default: 'N',
+    },
+
+    referenceNumber: {
+      type: String,
+      default: null,
+    },
+
+    responseMessage: {
+      type: String,
+      default: 'New User,OTP Sent',
+    },
+  },
+  {
+    timestamps: true,
+    versionKey: false,
+  }
+);
+
+EBillUserCheckSchema.index({
+  accountNo: 1,
+  tpNo: 1,
+  econtact: 1,
+  econtactType: 1,
+});
 
 /* ------------------------------------------------------------------ */
 /* Model exports                                                      */
@@ -360,5 +418,10 @@ module.exports = {
   SMSServiceStatus: mongoose.model(
     'SMSServiceStatus',
     SMSServiceStatusSchema
+  ),
+
+  EBillUserCheck: mongoose.model(
+    'EBillUserCheck',
+    EBillUserCheckSchema
   ),
 };
