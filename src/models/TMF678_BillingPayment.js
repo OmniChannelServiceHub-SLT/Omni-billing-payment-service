@@ -295,6 +295,40 @@ EBillStatusSchema.index({
   tpNo: 1,
 });
 /* ------------------------------------------------------------------ */
+/* SMS Service Status Request - Excel sheet "23"                      */
+/* ------------------------------------------------------------------ */
+
+const SMSServiceStatusSchema = new mongoose.Schema(
+  {
+    accountNo: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    tpNo: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    serviceAvailable: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  {
+    timestamps: true,
+    versionKey: false,
+  }
+);
+
+SMSServiceStatusSchema.index({
+  accountNo: 1,
+  tpNo: 1,
+});
+
+/* ------------------------------------------------------------------ */
 /* Model exports                                                      */
 /* ------------------------------------------------------------------ */
 
@@ -322,5 +356,9 @@ module.exports = {
   EBillStatus: mongoose.model(
     'EBillStatus',
     EBillStatusSchema
+  ),
+  SMSServiceStatus: mongoose.model(
+    'SMSServiceStatus',
+    SMSServiceStatusSchema
   ),
 };
