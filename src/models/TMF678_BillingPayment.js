@@ -445,7 +445,68 @@ EBillRegistrationSchema.index({
   accountNumber: 1,
   eventSource: 1,
 });
+/* ------------------------------------------------------------------ */
+/* Smart Bill Registration Sorce - Mapping row 77                     */
+/* ------------------------------------------------------------------ */
 
+const SmartBillRegistrationSorceSchema =
+  new mongoose.Schema(
+    {
+      eventSource: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      accountNumber: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      billingContact: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      billHandingCode: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      sourceTypeId: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      isCustomerConfirmed: {
+        type: Boolean,
+        default: false,
+      },
+
+      isPrestigeCustomer: {
+        type: Boolean,
+        default: false,
+      },
+
+      registrationStatus: {
+        type: String,
+        default: 'updated',
+      },
+    },
+    {
+      timestamps: true,
+      versionKey: false,
+    }
+  );
+
+SmartBillRegistrationSorceSchema.index({
+  accountNumber: 1,
+  eventSource: 1,
+});
 /* ------------------------------------------------------------------ */
 /* Model exports                                                      */
 /* ------------------------------------------------------------------ */
@@ -488,5 +549,10 @@ module.exports = {
   EBillRegistration: mongoose.model(
     'EBillRegistration',
     EBillRegistrationSchema
+  ),
+
+  SmartBillRegistrationSorce: mongoose.model(
+    'SmartBillRegistrationSorce',
+    SmartBillRegistrationSorceSchema
   ),
 };
