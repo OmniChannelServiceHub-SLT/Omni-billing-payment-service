@@ -385,6 +385,66 @@ EBillUserCheckSchema.index({
   econtact: 1,
   econtactType: 1,
 });
+/* ------------------------------------------------------------------ */
+/* eBill Registration - Excel sheet "21"                              */
+/* ------------------------------------------------------------------ */
+
+const EBillRegistrationSchema = new mongoose.Schema(
+  {
+    eventSource: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    newEmailAddress: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+
+    newContactNumber: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+
+    accountNumber: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    isEnableSms: {
+      type: Boolean,
+      default: false,
+    },
+
+    isAlreadyRegistered: {
+      type: Boolean,
+      default: false,
+    },
+
+    isPrestigeCustomer: {
+      type: Boolean,
+      default: false,
+    },
+
+    registrationStatus: {
+      type: String,
+      default: 'updated',
+    },
+  },
+  {
+    timestamps: true,
+    versionKey: false,
+  }
+);
+
+EBillRegistrationSchema.index({
+  accountNumber: 1,
+  eventSource: 1,
+});
 
 /* ------------------------------------------------------------------ */
 /* Model exports                                                      */
@@ -423,5 +483,10 @@ module.exports = {
   EBillUserCheck: mongoose.model(
     'EBillUserCheck',
     EBillUserCheckSchema
+  ),
+
+  EBillRegistration: mongoose.model(
+    'EBillRegistration',
+    EBillRegistrationSchema
   ),
 };
