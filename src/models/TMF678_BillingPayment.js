@@ -507,6 +507,53 @@ SmartBillRegistrationSorceSchema.index({
   accountNumber: 1,
   eventSource: 1,
 });
+
+/* ------------------------------------------------------------------ */
+/* Smart Bill Registration                                            */
+/* ------------------------------------------------------------------ */
+
+const SmartBillRegistrationSchema =
+  new mongoose.Schema(
+    {
+      tpNo: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      accountNo: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      econtact: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      billCode: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      registrationStatus: {
+        type: String,
+        default: 'updated',
+      },
+    },
+    {
+      timestamps: true,
+      versionKey: false,
+    }
+  );
+
+SmartBillRegistrationSchema.index({
+  accountNo: 1,
+  tpNo: 1,
+});
 /* ------------------------------------------------------------------ */
 /* Model exports                                                      */
 /* ------------------------------------------------------------------ */
@@ -554,5 +601,10 @@ module.exports = {
   SmartBillRegistrationSorce: mongoose.model(
     'SmartBillRegistrationSorce',
     SmartBillRegistrationSorceSchema
+  ),
+
+  SmartBillRegistration: mongoose.model(
+    'SmartBillRegistration',
+    SmartBillRegistrationSchema
   ),
 };
