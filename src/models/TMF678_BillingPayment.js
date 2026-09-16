@@ -870,6 +870,38 @@ SaveInvoiceSchema.index({
 });
 
 /* ------------------------------------------------------------------ */
+/* Invoice Data                                                       */
+/* ------------------------------------------------------------------ */
+
+const InvoiceDataSchema = new mongoose.Schema(
+  {
+    refNo: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
+
+    invoiceData: {
+      type: mongoose.Schema.Types.Mixed,
+      required: true,
+      default: {},
+    },
+
+    updateStatus: {
+      type: String,
+      default: 'updated',
+      trim: true,
+    },
+  },
+  {
+    timestamps: true,
+    versionKey: false,
+  }
+);
+
+
+/* ------------------------------------------------------------------ */
 /* Model exports                                                      */
 /* ------------------------------------------------------------------ */
 
@@ -949,5 +981,9 @@ module.exports = {
   SaveInvoice: mongoose.model(
     'SaveInvoice',
     SaveInvoiceSchema
+  ),
+  InvoiceData: mongoose.model(
+    'InvoiceData',
+    InvoiceDataSchema
   ),
 };
