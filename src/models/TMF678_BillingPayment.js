@@ -900,9 +900,6 @@ const InvoiceDataSchema = new mongoose.Schema(
   }
 );
 
-InvoiceDataSchema.index({
-  refNo: 1,
-});
 
 /* ------------------------------------------------------------------ */
 /* Model exports                                                      */
