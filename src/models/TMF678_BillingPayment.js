@@ -555,6 +555,73 @@ SmartBillRegistrationSchema.index({
   tpNo: 1,
 });
 /* ------------------------------------------------------------------ */
+/* Smart Bill Send Request                                            */
+/* ------------------------------------------------------------------ */
+
+const SmartBillSendRequestSchema =
+  new mongoose.Schema(
+    {
+      tpNo: {
+        type: String,
+        default: '',
+        trim: true,
+      },
+
+      accountNo: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      econtact: {
+        type: String,
+        default: '',
+        trim: true,
+      },
+
+      billCode: {
+        type: String,
+        default: '',
+        trim: true,
+      },
+
+      isEnableSms: {
+        type: Boolean,
+        default: false,
+      },
+
+      isAlreadyRegistered: {
+        type: Boolean,
+        default: false,
+      },
+
+      isPrestigeCustomer: {
+        type: Boolean,
+        default: false,
+      },
+
+      billRequestingMonth: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      requestStatus: {
+        type: String,
+        default: 'sent',
+      },
+    },
+    {
+      timestamps: true,
+      versionKey: false,
+    }
+  );
+
+SmartBillSendRequestSchema.index({
+  accountNo: 1,
+  billRequestingMonth: 1,
+});
+/* ------------------------------------------------------------------ */
 /* Model exports                                                      */
 /* ------------------------------------------------------------------ */
 
@@ -606,5 +673,10 @@ module.exports = {
   SmartBillRegistration: mongoose.model(
     'SmartBillRegistration',
     SmartBillRegistrationSchema
+  ),
+
+  SmartBillSendRequest: mongoose.model(
+    'SmartBillSendRequest',
+    SmartBillSendRequestSchema
   ),
 };
