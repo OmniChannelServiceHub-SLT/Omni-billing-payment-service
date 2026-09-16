@@ -621,6 +621,56 @@ SmartBillSendRequestSchema.index({
   accountNo: 1,
   billRequestingMonth: 1,
 });
+
+/* ------------------------------------------------------------------ */
+/* E-Bill Resend Request                                              */
+/* ------------------------------------------------------------------ */
+
+const EBillResendRequestSchema =
+  new mongoose.Schema(
+    {
+      eContact: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      accountNo: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      ebillMonth: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      tpNo: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      resendStatus: {
+        type: String,
+        default: 'sent',
+      },
+    },
+    {
+      timestamps: true,
+      versionKey: false,
+    }
+  );
+
+EBillResendRequestSchema.index({
+  accountNo: 1,
+  ebillMonth: 1,
+  tpNo: 1,
+});
+
+
 /* ------------------------------------------------------------------ */
 /* Model exports                                                      */
 /* ------------------------------------------------------------------ */
@@ -678,5 +728,10 @@ module.exports = {
   SmartBillSendRequest: mongoose.model(
     'SmartBillSendRequest',
     SmartBillSendRequestSchema
+  ),
+
+  EBillResendRequest: mongoose.model(
+    'EBillResendRequest',
+    EBillResendRequestSchema
   ),
 };
