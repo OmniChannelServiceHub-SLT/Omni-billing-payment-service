@@ -670,6 +670,53 @@ EBillResendRequestSchema.index({
   tpNo: 1,
 });
 
+/* ------------------------------------------------------------------ */
+/* E-Bill Download Request                                            */
+/* ------------------------------------------------------------------ */
+
+const EBillDownloadRequestSchema =
+  new mongoose.Schema(
+    {
+      eContact: {
+        type: String,
+        default: '',
+        trim: true,
+      },
+
+      accountNo: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      ebillMonth: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      tpNo: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      downloadStatus: {
+        type: String,
+        default: 'requested',
+      },
+    },
+    {
+      timestamps: true,
+      versionKey: false,
+    }
+  );
+
+EBillDownloadRequestSchema.index({
+  accountNo: 1,
+  ebillMonth: 1,
+  tpNo: 1,
+});
 
 /* ------------------------------------------------------------------ */
 /* Model exports                                                      */
@@ -733,5 +780,9 @@ module.exports = {
   EBillResendRequest: mongoose.model(
     'EBillResendRequest',
     EBillResendRequestSchema
+  ),
+  EBillDownloadRequest: mongoose.model(
+    'EBillDownloadRequest',
+    EBillDownloadRequestSchema
   ),
 };
