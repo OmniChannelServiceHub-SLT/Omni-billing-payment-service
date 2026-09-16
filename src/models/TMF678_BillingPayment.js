@@ -764,6 +764,51 @@ BillDownloadRequestSchema.index({
   ebillMonth: 1,
   tpNo: 1,
 });
+
+/* ------------------------------------------------------------------ */
+/* Bill Codes                                                         */
+/* ------------------------------------------------------------------ */
+
+const BillCodeSchema = new mongoose.Schema(
+  {
+    billCode: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    billCodeDescription: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+
+    displayOrder: {
+      type: Number,
+      default: 0,
+    },
+  },
+  {
+    timestamps: true,
+    versionKey: false,
+  }
+);
+
+BillCodeSchema.index(
+  {
+    billCode: 1,
+  },
+  {
+    unique: true,
+  }
+);
+
+
 /* ------------------------------------------------------------------ */
 /* Model exports                                                      */
 /* ------------------------------------------------------------------ */
@@ -835,5 +880,10 @@ module.exports = {
   BillDownloadRequest: mongoose.model(
     'BillDownloadRequest',
     BillDownloadRequestSchema
+  ),
+
+  BillCode: mongoose.model(
+    'BillCode',
+    BillCodeSchema
   ),
 };
