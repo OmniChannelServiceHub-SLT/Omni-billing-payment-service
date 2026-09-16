@@ -807,7 +807,67 @@ BillCodeSchema.index(
     unique: true,
   }
 );
+/* ------------------------------------------------------------------ */
+/* Save Invoice                                                       */
+/* ------------------------------------------------------------------ */
 
+const SaveInvoiceSchema = new mongoose.Schema(
+  {
+    refNo: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    serviceType: {
+      type: String,
+      required: true,
+      trim: true,
+      uppercase: true,
+    },
+
+    packageName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    packageCount: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+
+    rental: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+
+    initialCharge: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    status: {
+      type: String,
+      required: true,
+      trim: true,
+      default: '1',
+    },
+  },
+  {
+    timestamps: true,
+    versionKey: false,
+  }
+);
+
+SaveInvoiceSchema.index({
+  refNo: 1,
+  serviceType: 1,
+  packageName: 1,
+});
 
 /* ------------------------------------------------------------------ */
 /* Model exports                                                      */
@@ -885,5 +945,9 @@ module.exports = {
   BillCode: mongoose.model(
     'BillCode',
     BillCodeSchema
+  ),
+  SaveInvoice: mongoose.model(
+    'SaveInvoice',
+    SaveInvoiceSchema
   ),
 };
