@@ -294,6 +294,7 @@ EBillStatusSchema.index({
   accountNo: 1,
   tpNo: 1,
 });
+
 /* ------------------------------------------------------------------ */
 /* TMF678 - createBillStatusRequest (row A147, sheet "147")           */
 /* ------------------------------------------------------------------ */
@@ -336,6 +337,615 @@ BillStatusSchema.index({
   tpNo: 1,
 });
 
+/* ------------------------------------------------------------------ */
+/* SMS Service Status Request - Excel sheet "23"                      */
+/* ------------------------------------------------------------------ */
+
+const SMSServiceStatusSchema = new mongoose.Schema(
+  {
+    accountNo: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    tpNo: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    serviceAvailable: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  {
+    timestamps: true,
+    versionKey: false,
+  }
+);
+
+SMSServiceStatusSchema.index({
+  accountNo: 1,
+  tpNo: 1,
+});
+/* ------------------------------------------------------------------ */
+/* eBill Check User Exist - Excel sheet "24"                          */
+/* ------------------------------------------------------------------ */
+
+const EBillUserCheckSchema = new mongoose.Schema(
+  {
+    accountNo: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    tpNo: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    econtact: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    econtactType: {
+      type: String,
+      required: true,
+      trim: true,
+      uppercase: true,
+    },
+
+    userexist: {
+      type: String,
+      default: 'N',
+    },
+
+    referenceNumber: {
+      type: String,
+      default: null,
+    },
+
+    responseMessage: {
+      type: String,
+      default: 'New User,OTP Sent',
+    },
+  },
+  {
+    timestamps: true,
+    versionKey: false,
+  }
+);
+
+EBillUserCheckSchema.index({
+  accountNo: 1,
+  tpNo: 1,
+  econtact: 1,
+  econtactType: 1,
+});
+/* ------------------------------------------------------------------ */
+/* eBill Registration - Excel sheet "21"                              */
+/* ------------------------------------------------------------------ */
+
+const EBillRegistrationSchema = new mongoose.Schema(
+  {
+    eventSource: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    newEmailAddress: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+
+    newContactNumber: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+
+    accountNumber: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    isEnableSms: {
+      type: Boolean,
+      default: false,
+    },
+
+    isAlreadyRegistered: {
+      type: Boolean,
+      default: false,
+    },
+
+    isPrestigeCustomer: {
+      type: Boolean,
+      default: false,
+    },
+
+    registrationStatus: {
+      type: String,
+      default: 'updated',
+    },
+  },
+  {
+    timestamps: true,
+    versionKey: false,
+  }
+);
+
+EBillRegistrationSchema.index({
+  accountNumber: 1,
+  eventSource: 1,
+});
+/* ------------------------------------------------------------------ */
+/* Smart Bill Registration Sorce - Mapping row 77                     */
+/* ------------------------------------------------------------------ */
+
+const SmartBillRegistrationSorceSchema =
+  new mongoose.Schema(
+    {
+      eventSource: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      accountNumber: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      billingContact: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      billHandingCode: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      sourceTypeId: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      isCustomerConfirmed: {
+        type: Boolean,
+        default: false,
+      },
+
+      isPrestigeCustomer: {
+        type: Boolean,
+        default: false,
+      },
+
+      registrationStatus: {
+        type: String,
+        default: 'updated',
+      },
+    },
+    {
+      timestamps: true,
+      versionKey: false,
+    }
+  );
+
+SmartBillRegistrationSorceSchema.index({
+  accountNumber: 1,
+  eventSource: 1,
+});
+
+/* ------------------------------------------------------------------ */
+/* Smart Bill Registration                                            */
+/* ------------------------------------------------------------------ */
+
+const SmartBillRegistrationSchema =
+  new mongoose.Schema(
+    {
+      tpNo: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      accountNo: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      econtact: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      billCode: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      registrationStatus: {
+        type: String,
+        default: 'updated',
+      },
+    },
+    {
+      timestamps: true,
+      versionKey: false,
+    }
+  );
+
+SmartBillRegistrationSchema.index({
+  accountNo: 1,
+  tpNo: 1,
+});
+/* ------------------------------------------------------------------ */
+/* Smart Bill Send Request                                            */
+/* ------------------------------------------------------------------ */
+
+const SmartBillSendRequestSchema =
+  new mongoose.Schema(
+    {
+      tpNo: {
+        type: String,
+        default: '',
+        trim: true,
+      },
+
+      accountNo: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      econtact: {
+        type: String,
+        default: '',
+        trim: true,
+      },
+
+      billCode: {
+        type: String,
+        default: '',
+        trim: true,
+      },
+
+      isEnableSms: {
+        type: Boolean,
+        default: false,
+      },
+
+      isAlreadyRegistered: {
+        type: Boolean,
+        default: false,
+      },
+
+      isPrestigeCustomer: {
+        type: Boolean,
+        default: false,
+      },
+
+      billRequestingMonth: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      requestStatus: {
+        type: String,
+        default: 'sent',
+      },
+    },
+    {
+      timestamps: true,
+      versionKey: false,
+    }
+  );
+
+SmartBillSendRequestSchema.index({
+  accountNo: 1,
+  billRequestingMonth: 1,
+});
+
+/* ------------------------------------------------------------------ */
+/* E-Bill Resend Request                                              */
+/* ------------------------------------------------------------------ */
+
+const EBillResendRequestSchema =
+  new mongoose.Schema(
+    {
+      eContact: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      accountNo: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      ebillMonth: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      tpNo: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      resendStatus: {
+        type: String,
+        default: 'sent',
+      },
+    },
+    {
+      timestamps: true,
+      versionKey: false,
+    }
+  );
+
+EBillResendRequestSchema.index({
+  accountNo: 1,
+  ebillMonth: 1,
+  tpNo: 1,
+});
+
+/* ------------------------------------------------------------------ */
+/* E-Bill Download Request                                            */
+/* ------------------------------------------------------------------ */
+
+const EBillDownloadRequestSchema =
+  new mongoose.Schema(
+    {
+      eContact: {
+        type: String,
+        default: '',
+        trim: true,
+      },
+
+      accountNo: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      ebillMonth: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      tpNo: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      downloadStatus: {
+        type: String,
+        default: 'requested',
+      },
+    },
+    {
+      timestamps: true,
+      versionKey: false,
+    }
+  );
+
+EBillDownloadRequestSchema.index({
+  accountNo: 1,
+  ebillMonth: 1,
+  tpNo: 1,
+});
+/* ------------------------------------------------------------------ */
+/* Bill Download Request                                              */
+/* ------------------------------------------------------------------ */
+
+const BillDownloadRequestSchema =
+  new mongoose.Schema(
+    {
+      eContact: {
+        type: String,
+        default: '',
+        trim: true,
+      },
+
+      accountNo: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      ebillMonth: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      tpNo: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      downloadStatus: {
+        type: String,
+        default: 'requested',
+      },
+    },
+    {
+      timestamps: true,
+      versionKey: false,
+    }
+  );
+
+BillDownloadRequestSchema.index({
+  accountNo: 1,
+  ebillMonth: 1,
+  tpNo: 1,
+});
+
+/* ------------------------------------------------------------------ */
+/* Bill Codes                                                         */
+/* ------------------------------------------------------------------ */
+
+const BillCodeSchema = new mongoose.Schema(
+  {
+    billCode: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    billCodeDescription: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+
+    displayOrder: {
+      type: Number,
+      default: 0,
+    },
+  },
+  {
+    timestamps: true,
+    versionKey: false,
+  }
+);
+
+BillCodeSchema.index(
+  {
+    billCode: 1,
+  },
+  {
+    unique: true,
+  }
+);
+/* ------------------------------------------------------------------ */
+/* Save Invoice                                                       */
+/* ------------------------------------------------------------------ */
+
+const SaveInvoiceSchema = new mongoose.Schema(
+  {
+    refNo: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    serviceType: {
+      type: String,
+      required: true,
+      trim: true,
+      uppercase: true,
+    },
+
+    packageName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    packageCount: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+
+    rental: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+
+    initialCharge: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    status: {
+      type: String,
+      required: true,
+      trim: true,
+      default: '1',
+    },
+  },
+  {
+    timestamps: true,
+    versionKey: false,
+  }
+);
+
+SaveInvoiceSchema.index({
+  refNo: 1,
+  serviceType: 1,
+  packageName: 1,
+});
+/* ------------------------------------------------------------------ */
+/* Invoice Data                                                       */
+/* ------------------------------------------------------------------ */
+
+const InvoiceDataSchema = new mongoose.Schema(
+  {
+    refNo: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
+
+    invoiceData: {
+      type: mongoose.Schema.Types.Mixed,
+      required: true,
+      default: {},
+    },
+
+    updateStatus: {
+      type: String,
+      default: 'updated',
+      trim: true,
+    },
+  },
+  {
+    timestamps: true,
+    versionKey: false,
+  }
+);
+
+/* ------------------------------------------------------------------ */
+/* Invoice Data                                                       */
+/* ------------------------------------------------------------------ */
+
 
 /* ------------------------------------------------------------------ */
 /* Model exports                                                      */
@@ -366,9 +976,66 @@ module.exports = {
     'EBillStatus',
     EBillStatusSchema
   ),
-  
+
   BillStatus: mongoose.model(
     'BillStatus',
     BillStatusSchema
+  ),
+
+  SMSServiceStatus: mongoose.model(
+    'SMSServiceStatus',
+    SMSServiceStatusSchema
+  ),
+
+  EBillUserCheck: mongoose.model(
+    'EBillUserCheck',
+    EBillUserCheckSchema
+  ),
+
+  EBillRegistration: mongoose.model(
+    'EBillRegistration',
+    EBillRegistrationSchema
+  ),
+
+  SmartBillRegistrationSorce: mongoose.model(
+    'SmartBillRegistrationSorce',
+    SmartBillRegistrationSorceSchema
+  ),
+
+  SmartBillRegistration: mongoose.model(
+    'SmartBillRegistration',
+    SmartBillRegistrationSchema
+  ),
+
+  SmartBillSendRequest: mongoose.model(
+    'SmartBillSendRequest',
+    SmartBillSendRequestSchema
+  ),
+
+  EBillResendRequest: mongoose.model(
+    'EBillResendRequest',
+    EBillResendRequestSchema
+  ),
+  EBillDownloadRequest: mongoose.model(
+    'EBillDownloadRequest',
+    EBillDownloadRequestSchema
+  ),
+
+  BillDownloadRequest: mongoose.model(
+    'BillDownloadRequest',
+    BillDownloadRequestSchema
+  ),
+
+  BillCode: mongoose.model(
+    'BillCode',
+    BillCodeSchema
+  ),
+  SaveInvoice: mongoose.model(
+    'SaveInvoice',
+    SaveInvoiceSchema
+  ),
+  InvoiceData: mongoose.model(
+    'InvoiceData',
+    InvoiceDataSchema
   ),
 };
