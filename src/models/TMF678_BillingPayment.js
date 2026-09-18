@@ -903,33 +903,6 @@ const InvoiceDataSchema = new mongoose.Schema(
 /* Invoice Data                                                       */
 /* ------------------------------------------------------------------ */
 
-const InvoiceDataSchema = new mongoose.Schema(
-  {
-    refNo: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-    },
-
-    invoiceData: {
-      type: mongoose.Schema.Types.Mixed,
-      required: true,
-      default: {},
-    },
-
-    updateStatus: {
-      type: String,
-      default: 'updated',
-      trim: true,
-    },
-  },
-  {
-    timestamps: true,
-    versionKey: false,
-  }
-);
-
 
 /* ------------------------------------------------------------------ */
 /* Model exports                                                      */
