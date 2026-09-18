@@ -1,11 +1,6 @@
-// src/APIs/createBillStatusRequest/mappers/billStatusMapper.js
-
 const CUSTOMER_BILL_BASE_PATH =
   '/tmf-api/customerBillManagement/v4/customerBill';
 
-/**
- * Exact legacy dataBundle from Excel sheet "147".
- */
 function toLegacyDataBundle(record) {
   return {
     bill_code: record.bill_code,
@@ -22,36 +17,40 @@ function toLegacyDataBundle(record) {
   };
 }
 
-/**
- * Convert the bill status record into a
- * TMF678-aligned CustomerBill resource.
- */
+function toContactMedium(record) {
+  const contactMedium = [];
+
+  const values = [
+    record.mobile,
+    record.email,
+  ].filter(Boolean);
+
+  for (const value of values) {
+    if (String(value).includes('@')) {
+      contactMedium.push({
+        mediumType: 'email',
+        characteristic: {
+          emailAddress: value,
+        },
+      });
+    } else {
+      contactMedium.push({
+        mediumType: 'telephone',
+        characteristic: {
+          phoneNumber: value,
+        },
+      });
+    }
+  }
+
+  return contactMedium;
+}
+
 function toTmfCustomerBill(record) {
   const id = String(record._id);
 
-  const contactMedium = [];
-
-  if (record.mobile) {
-    contactMedium.push({
-      mediumType: 'telephone',
-      characteristic: {
-        phoneNumber: record.mobile,
-      },
-    });
-  }
-
-  if (record.email) {
-    contactMedium.push({
-      mediumType: 'email',
-      characteristic: {
-        emailAddress: record.email,
-      },
-    });
-  }
-
   return {
     id,
-
     href: `${CUSTOMER_BILL_BASE_PATH}/${id}`,
 
     billingAccount: {
@@ -66,7 +65,7 @@ function toTmfCustomerBill(record) {
       },
     ],
 
-    contactMedium,
+    contactMedium: toContactMedium(record),
 
     billCode: record.bill_code,
     billCodeDescription: record.bill_code_desc,
