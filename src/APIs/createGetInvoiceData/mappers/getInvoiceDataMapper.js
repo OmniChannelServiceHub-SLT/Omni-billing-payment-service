@@ -16,15 +16,12 @@ function toCharacteristics(record) {
 function toTmfResponse(record) {
   return {
     id: record._id.toString(),
-    href:
-      `/tmf-api/customerBillManagement/v4/customerBill/` +
-      record._id.toString(),
+    href: `/tmf-api/paymentManagement/v4/invoice-data?REF_NO=${encodeURIComponent(record.refNo)}`,
     characteristic: toCharacteristics(record),
     state: record.updateStatus || 'updated',
-    '@type': 'CustomerBill',
+    '@type': 'InvoiceData',
   };
 }
-
 function toLegacyResponse(record) {
   return {
     isSuccess: true,
