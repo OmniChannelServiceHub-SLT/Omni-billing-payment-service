@@ -50,8 +50,7 @@ function toTmfCustomerBill(record) {
 
   const response = {
     id,
-    href:
-      `/tmf-api/customerBillManagement/v4/customerBill/${id}`,
+    href: `/tmf-api/paymentManagement/v4/invoice-data?REF_NO=${encodeURIComponent(record.refNo)}`,
     characteristic: [
       {
         name: 'referenceNumber',
@@ -71,7 +70,7 @@ function toTmfCustomerBill(record) {
         })),
     ],
     state: record.updateStatus,
-    '@type': 'CustomerBill',
+    '@type': 'InvoiceData',
   };
 
   if (partyId) {
