@@ -1,6 +1,6 @@
 const {
   InvoiceData,
-} = require('../../../models/TMF678_BillingPayment');
+} = require('../../../models/TMF676_Payment');
 
 async function bulkUpdateInvoiceData(records) {
   const operations = records.map((record) => ({

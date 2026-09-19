@@ -1,19 +1,13 @@
 // src/models/TMF678_BillingPayment.js
 //
-// Consolidated model file for the Billing & Payment Service.
-//
-// TM Forum APIs:
-// - TMF678 Customer Bill Management
-// - TMF676 Payment Management
-//
-// Legacy response fields are based on the sample responses in
-// API_Params_SLTOMNI_V2_0_1.xlsx.
+// Models for TMF678 Customer Bill Management.
+// Legacy response fields follow API_Params_SLTOMNI_V2_0_1.xlsx.
 
 const mongoose = require('mongoose');
 
 /* ------------------------------------------------------------------ */
-/* TMF678 - Bill Detail Request                                       */
-/* Row 50 / Response sheet 14                                        */
+/* Bill Detail Request                                                */
+/* Row 50 / Response sheet 14                                         */
 /* ------------------------------------------------------------------ */
 
 const BillingInquirySchema = new mongoose.Schema(
@@ -25,9 +19,7 @@ const BillingInquirySchema = new mongoose.Schema(
     lastPaymentAmount: String,
     outstandingBalance: String,
   },
-  {
-    _id: false,
-  }
+  { _id: false }
 );
 
 const ProductDetailSchema = new mongoose.Schema(
@@ -43,12 +35,10 @@ const ProductDetailSchema = new mongoose.Schema(
     peoStatus: String,
     peoType: String,
 
-    // This spelling is used in the original response.
+    // Spelling used in the original response.
     subcriberID: String,
   },
-  {
-    _id: false,
-  }
+  { _id: false }
 );
 
 const UsageDetailSchema = new mongoose.Schema(
@@ -61,27 +51,19 @@ const UsageDetailSchema = new mongoose.Schema(
     volume_unit: String,
     expiry_date: String,
   },
-  {
-    _id: false,
-  }
+  { _id: false }
 );
 
 const MyPackageInfoSchema = new mongoose.Schema(
   {
     package_name: String,
-
     package_summary: {
       type: String,
       default: null,
     },
-
-    usageDetails: [
-      UsageDetailSchema,
-    ],
+    usageDetails: [UsageDetailSchema],
   },
-  {
-    _id: false,
-  }
+  { _id: false }
 );
 
 const BillDetailSchema = new mongoose.Schema(
@@ -91,33 +73,18 @@ const BillDetailSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-
     accountNo: {
       type: String,
       required: true,
       trim: true,
     },
-
-    /*
-     * TMF678 CustomerBill state.
-     *
-     * This field supports the CTK PATCH operation:
-     * PATCH /customerBill/:id
-     */
     state: {
       type: String,
       default: 'generated',
       trim: true,
     },
-
-    listofbillingInquiryType: [
-      BillingInquirySchema,
-    ],
-
-    listofProductDetail: [
-      ProductDetailSchema,
-    ],
-
+    listofbillingInquiryType: [BillingInquirySchema],
+    listofProductDetail: [ProductDetailSchema],
     myPackageInfo: MyPackageInfoSchema,
   },
   {
@@ -132,8 +99,8 @@ BillDetailSchema.index({
 });
 
 /* ------------------------------------------------------------------ */
-/* TMF678 - Bill History Request                                      */
-/* Row 56 / Response sheet 17                                        */
+/* Bill History Request                                               */
+/* Row 56 / Response sheet 17                                         */
 /* ------------------------------------------------------------------ */
 
 const BillHistoryItemSchema = new mongoose.Schema(
@@ -143,13 +110,11 @@ const BillHistoryItemSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-
     accountNumber: {
       type: String,
       required: true,
       trim: true,
     },
-
     invoiceNumber: String,
     version: String,
     billType: String,
@@ -183,40 +148,9 @@ BillHistoryItemSchema.index({
 });
 
 /* ------------------------------------------------------------------ */
-/* TMF676 - Bill Payment Request                                      */
-/* Row 58 / Response sheet 28                                        */
+/* Bill History Request V2                                            */
+/* Row A90 / Response sheet 90                                        */
 /* ------------------------------------------------------------------ */
-
-const BillPaymentSchema = new mongoose.Schema(
-  {
-    telephoneNo: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    accountNo: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    billAmount: String,
-    lastBillDate: String,
-    paymentDueDate: String,
-    lastPaymentDate: String,
-    lastPaymentAmount: String,
-    outstandingBalance: String,
-  },
-  {
-    timestamps: true,
-    versionKey: false,
-  }
-);
-
-/* ---------------------------------------------------------------------- */
-/* TMF678 - createBillHistoryRequestV2 (row A90, sheet "90")              */
-/* ---------------------------------------------------------------------- */
 
 const BillHistoryV2ItemSchema = new mongoose.Schema(
   {
@@ -225,13 +159,11 @@ const BillHistoryV2ItemSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-
     accountNo: {
       type: String,
       required: true,
       trim: true,
     },
-
     billMonth: String,
     billValue: String,
     payments: String,
@@ -251,13 +183,9 @@ BillHistoryV2ItemSchema.index({
   billMonth: -1,
 });
 
-
-BillPaymentSchema.index({
-  telephoneNo: 1,
-  accountNo: 1,
-});
 /* ------------------------------------------------------------------ */
-/* TMF678 - createEBillStatusRequest (row A22, sheet "22")            */
+/* eBill Status Request                                               */
+/* Row A22 / Response sheet 22                                        */
 /* ------------------------------------------------------------------ */
 
 const EBillStatusSchema = new mongoose.Schema(
@@ -267,18 +195,15 @@ const EBillStatusSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-
     tpNo: {
       type: String,
       required: true,
       trim: true,
     },
-
     mobileno: {
       type: String,
       default: null,
     },
-
     emailaddress: {
       type: String,
       default: null,
@@ -296,7 +221,8 @@ EBillStatusSchema.index({
 });
 
 /* ------------------------------------------------------------------ */
-/* TMF678 - createBillStatusRequest (row A147, sheet "147")           */
+/* Bill Status Request                                                */
+/* Row A147 / Response sheet 147                                      */
 /* ------------------------------------------------------------------ */
 
 const BillStatusSchema = new mongoose.Schema(
@@ -306,18 +232,15 @@ const BillStatusSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-
     tpNo: {
       type: String,
       required: true,
       trim: true,
     },
-
     bill_code: String,
     bill_code_desc: String,
     mobile: String,
     email: String,
-
     possiblebillmodelist: [
       {
         _id: false,
@@ -338,7 +261,8 @@ BillStatusSchema.index({
 });
 
 /* ------------------------------------------------------------------ */
-/* SMS Service Status Request - Excel sheet "23"                      */
+/* SMS Service Status Request                                         */
+/* Response sheet 23                                                  */
 /* ------------------------------------------------------------------ */
 
 const SMSServiceStatusSchema = new mongoose.Schema(
@@ -348,13 +272,11 @@ const SMSServiceStatusSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-
     tpNo: {
       type: String,
       required: true,
       trim: true,
     },
-
     serviceAvailable: {
       type: Boolean,
       default: false,
@@ -370,8 +292,10 @@ SMSServiceStatusSchema.index({
   accountNo: 1,
   tpNo: 1,
 });
+
 /* ------------------------------------------------------------------ */
-/* eBill Check User Exist - Excel sheet "24"                          */
+/* eBill Check User Exist                                             */
+/* Response sheet 24                                                  */
 /* ------------------------------------------------------------------ */
 
 const EBillUserCheckSchema = new mongoose.Schema(
@@ -381,36 +305,30 @@ const EBillUserCheckSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-
     tpNo: {
       type: String,
       required: true,
       trim: true,
     },
-
     econtact: {
       type: String,
       required: true,
       trim: true,
     },
-
     econtactType: {
       type: String,
       required: true,
       trim: true,
       uppercase: true,
     },
-
     userexist: {
       type: String,
       default: 'N',
     },
-
     referenceNumber: {
       type: String,
       default: null,
     },
-
     responseMessage: {
       type: String,
       default: 'New User,OTP Sent',
@@ -428,8 +346,10 @@ EBillUserCheckSchema.index({
   econtact: 1,
   econtactType: 1,
 });
+
 /* ------------------------------------------------------------------ */
-/* eBill Registration - Excel sheet "21"                              */
+/* eBill Registration                                                 */
+/* Response sheet 21                                                  */
 /* ------------------------------------------------------------------ */
 
 const EBillRegistrationSchema = new mongoose.Schema(
@@ -439,40 +359,33 @@ const EBillRegistrationSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-
     newEmailAddress: {
       type: String,
       default: '',
       trim: true,
     },
-
     newContactNumber: {
       type: String,
       default: '',
       trim: true,
     },
-
     accountNumber: {
       type: String,
       required: true,
       trim: true,
     },
-
     isEnableSms: {
       type: Boolean,
       default: false,
     },
-
     isAlreadyRegistered: {
       type: Boolean,
       default: false,
     },
-
     isPrestigeCustomer: {
       type: Boolean,
       default: false,
     },
-
     registrationStatus: {
       type: String,
       default: 'updated',
@@ -488,8 +401,10 @@ EBillRegistrationSchema.index({
   accountNumber: 1,
   eventSource: 1,
 });
+
 /* ------------------------------------------------------------------ */
-/* Smart Bill Registration Sorce - Mapping row 77                     */
+/* Smart Bill Registration Sorce                                      */
+/* Mapping row 77                                                    */
 /* ------------------------------------------------------------------ */
 
 const SmartBillRegistrationSorceSchema =
@@ -500,41 +415,34 @@ const SmartBillRegistrationSorceSchema =
         required: true,
         trim: true,
       },
-
       accountNumber: {
         type: String,
         required: true,
         trim: true,
       },
-
       billingContact: {
         type: String,
         required: true,
         trim: true,
       },
-
       billHandingCode: {
         type: String,
         required: true,
         trim: true,
       },
-
       sourceTypeId: {
         type: String,
         required: true,
         trim: true,
       },
-
       isCustomerConfirmed: {
         type: Boolean,
         default: false,
       },
-
       isPrestigeCustomer: {
         type: Boolean,
         default: false,
       },
-
       registrationStatus: {
         type: String,
         default: 'updated',
@@ -563,25 +471,21 @@ const SmartBillRegistrationSchema =
         required: true,
         trim: true,
       },
-
       accountNo: {
         type: String,
         required: true,
         trim: true,
       },
-
       econtact: {
         type: String,
         required: true,
         trim: true,
       },
-
       billCode: {
         type: String,
         required: true,
         trim: true,
       },
-
       registrationStatus: {
         type: String,
         default: 'updated',
@@ -597,6 +501,7 @@ SmartBillRegistrationSchema.index({
   accountNo: 1,
   tpNo: 1,
 });
+
 /* ------------------------------------------------------------------ */
 /* Smart Bill Send Request                                            */
 /* ------------------------------------------------------------------ */
@@ -609,46 +514,38 @@ const SmartBillSendRequestSchema =
         default: '',
         trim: true,
       },
-
       accountNo: {
         type: String,
         required: true,
         trim: true,
       },
-
       econtact: {
         type: String,
         default: '',
         trim: true,
       },
-
       billCode: {
         type: String,
         default: '',
         trim: true,
       },
-
       isEnableSms: {
         type: Boolean,
         default: false,
       },
-
       isAlreadyRegistered: {
         type: Boolean,
         default: false,
       },
-
       isPrestigeCustomer: {
         type: Boolean,
         default: false,
       },
-
       billRequestingMonth: {
         type: String,
         required: true,
         trim: true,
       },
-
       requestStatus: {
         type: String,
         default: 'sent',
@@ -677,25 +574,21 @@ const EBillResendRequestSchema =
         required: true,
         trim: true,
       },
-
       accountNo: {
         type: String,
         required: true,
         trim: true,
       },
-
       ebillMonth: {
         type: String,
         required: true,
         trim: true,
       },
-
       tpNo: {
         type: String,
         required: true,
         trim: true,
       },
-
       resendStatus: {
         type: String,
         default: 'sent',
@@ -725,25 +618,21 @@ const EBillDownloadRequestSchema =
         default: '',
         trim: true,
       },
-
       accountNo: {
         type: String,
         required: true,
         trim: true,
       },
-
       ebillMonth: {
         type: String,
         required: true,
         trim: true,
       },
-
       tpNo: {
         type: String,
         required: true,
         trim: true,
       },
-
       downloadStatus: {
         type: String,
         default: 'requested',
@@ -760,6 +649,7 @@ EBillDownloadRequestSchema.index({
   ebillMonth: 1,
   tpNo: 1,
 });
+
 /* ------------------------------------------------------------------ */
 /* Bill Download Request                                              */
 /* ------------------------------------------------------------------ */
@@ -772,25 +662,21 @@ const BillDownloadRequestSchema =
         default: '',
         trim: true,
       },
-
       accountNo: {
         type: String,
         required: true,
         trim: true,
       },
-
       ebillMonth: {
         type: String,
         required: true,
         trim: true,
       },
-
       tpNo: {
         type: String,
         required: true,
         trim: true,
       },
-
       downloadStatus: {
         type: String,
         default: 'requested',
@@ -819,18 +705,15 @@ const BillCodeSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-
     billCodeDescription: {
       type: String,
       required: true,
       trim: true,
     },
-
     isActive: {
       type: Boolean,
       default: true,
     },
-
     displayOrder: {
       type: Number,
       default: 0,
@@ -843,109 +726,9 @@ const BillCodeSchema = new mongoose.Schema(
 );
 
 BillCodeSchema.index(
-  {
-    billCode: 1,
-  },
-  {
-    unique: true,
-  }
+  { billCode: 1 },
+  { unique: true }
 );
-/* ------------------------------------------------------------------ */
-/* Save Invoice                                                       */
-/* ------------------------------------------------------------------ */
-
-const SaveInvoiceSchema = new mongoose.Schema(
-  {
-    refNo: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    serviceType: {
-      type: String,
-      required: true,
-      trim: true,
-      uppercase: true,
-    },
-
-    packageName: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    packageCount: {
-      type: Number,
-      required: true,
-      min: 1,
-    },
-
-    rental: {
-      type: Number,
-      required: true,
-      min: 0,
-    },
-
-    initialCharge: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-
-    status: {
-      type: String,
-      required: true,
-      trim: true,
-      default: '1',
-    },
-  },
-  {
-    timestamps: true,
-    versionKey: false,
-  }
-);
-
-SaveInvoiceSchema.index({
-  refNo: 1,
-  serviceType: 1,
-  packageName: 1,
-});
-/* ------------------------------------------------------------------ */
-/* Invoice Data                                                       */
-/* ------------------------------------------------------------------ */
-
-const InvoiceDataSchema = new mongoose.Schema(
-  {
-    refNo: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-    },
-
-    invoiceData: {
-      type: mongoose.Schema.Types.Mixed,
-      required: true,
-      default: {},
-    },
-
-    updateStatus: {
-      type: String,
-      default: 'updated',
-      trim: true,
-    },
-  },
-  {
-    timestamps: true,
-    versionKey: false,
-  }
-);
-
-/* ------------------------------------------------------------------ */
-/* Invoice Data                                                       */
-/* ------------------------------------------------------------------ */
-
 
 /* ------------------------------------------------------------------ */
 /* Model exports                                                      */
@@ -965,11 +748,6 @@ module.exports = {
   BillHistoryV2Item: mongoose.model(
     'BillHistoryV2Item',
     BillHistoryV2ItemSchema
-  ),
-
-  BillPayment: mongoose.model(
-    'BillPayment',
-    BillPaymentSchema
   ),
 
   EBillStatus: mongoose.model(
@@ -1016,6 +794,7 @@ module.exports = {
     'EBillResendRequest',
     EBillResendRequestSchema
   ),
+
   EBillDownloadRequest: mongoose.model(
     'EBillDownloadRequest',
     EBillDownloadRequestSchema
@@ -1029,13 +808,5 @@ module.exports = {
   BillCode: mongoose.model(
     'BillCode',
     BillCodeSchema
-  ),
-  SaveInvoice: mongoose.model(
-    'SaveInvoice',
-    SaveInvoiceSchema
-  ),
-  InvoiceData: mongoose.model(
-    'InvoiceData',
-    InvoiceDataSchema
   ),
 };
