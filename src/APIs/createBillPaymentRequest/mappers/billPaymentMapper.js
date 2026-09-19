@@ -1,8 +1,5 @@
 // src/APIs/createBillPaymentRequest/mappers/billPaymentMapper.js
 
-const PAYMENT_BASE_PATH =
-  '/tmf-api/paymentManagement/v4/payment';
-
 /**
  * Exact legacy dataBundle from Excel sheet "28".
  */
@@ -30,8 +27,6 @@ function toTmfPayment(record) {
 
   return {
     id,
-
-    href: `${PAYMENT_BASE_PATH}/${id}`,
 
     paymentDate: record.lastPaymentDate,
 

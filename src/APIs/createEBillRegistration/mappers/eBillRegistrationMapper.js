@@ -1,8 +1,5 @@
 // src/APIs/createEBillRegistration/mappers/eBillRegistrationMapper.js
 
-const CUSTOMER_BILL_BASE_PATH =
-  '/tmf-api/customerBillManagement/v4/customerBill';
-
 /**
  * Exact legacy dataBundle from Excel sheet "21".
  */
@@ -19,8 +16,6 @@ function toTmfCustomerBill(record) {
 
   return {
     id,
-
-    href: `${CUSTOMER_BILL_BASE_PATH}/${id}`,
 
     billingAccount: {
       id: record.accountNumber,

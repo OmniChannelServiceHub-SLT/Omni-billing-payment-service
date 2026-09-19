@@ -1,8 +1,5 @@
 // src/APIs/createSmartBillRegistrationSorce/mappers/smartBillRegistrationSorceMapper.js
 
-const CUSTOMER_BILL_BASE_PATH =
-  '/tmf-api/customerBillManagement/v4/customerBill';
-
 /**
  * No separate legacy response sample is available
  * for this source operation.
@@ -20,8 +17,6 @@ function toTmfCustomerBill(record) {
 
   return {
     id,
-
-    href: `${CUSTOMER_BILL_BASE_PATH}/${id}`,
 
     billingAccount: {
       id: record.accountNumber,
