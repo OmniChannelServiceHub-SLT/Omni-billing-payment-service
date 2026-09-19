@@ -2,7 +2,7 @@
 
 const {
   BillPayment,
-} = require('../../../models/TMF678_BillingPayment');
+} = require('../../../models/TMF676_Payment');
 
 /**
  * Retrieve the raw billing/payment database record.

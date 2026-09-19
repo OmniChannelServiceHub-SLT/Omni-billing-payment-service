@@ -1,6 +1,6 @@
 const {
   SaveInvoice,
-} = require('../../../models/TMF678_BillingPayment');
+} = require('../../../models/TMF676_Payment');
 
 async function saveInvoice(invoiceData) {
   const record = await SaveInvoice.findOneAndUpdate(
