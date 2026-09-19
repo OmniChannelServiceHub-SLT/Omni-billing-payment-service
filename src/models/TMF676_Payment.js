@@ -109,9 +109,42 @@ const InvoiceDataSchema = new mongoose.Schema(
     versionKey: false,
   }
 );
+/* GetPaymentLogs - Excel sheet 114 */
+const PaymentLogSchema = new mongoose.Schema(
+  {
+    logId: String,
+    order_ref: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    nic_no: String,
+    sys_id: String,
+    date_enter: String,
+    amount: String,
+    epoch_val: String,
+    gw_ref: String,
+    gw_status: String,
+    refund_sys: String,
+    crm_state: String,
+    sys_status: String,
+    CRNumber: String,
+    AccNo: String,
+    refund_ncp: String,
+    passport_no: String,
+    lastUpdate: String,
+    cashierRef: String,
+  },
+  {
+    timestamps: true,
+    versionKey: false,
+  }
+);
 
+PaymentLogSchema.index({ order_ref: 1 });
 module.exports = {
   BillPayment: mongoose.model('BillPayment', BillPaymentSchema),
   SaveInvoice: mongoose.model('SaveInvoice', SaveInvoiceSchema),
   InvoiceData: mongoose.model('InvoiceData', InvoiceDataSchema),
+  PaymentLog: mongoose.model('PaymentLog', PaymentLogSchema),
 };
