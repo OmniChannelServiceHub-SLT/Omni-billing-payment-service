@@ -13,10 +13,8 @@ function toTmfCustomerBill(record) {
   const id = String(record._id);
 
   return {
-    id,
-    href:
-      `/tmf-api/customerBillManagement/v4/customerBill/${id}`,
-    characteristic: [
+  id,
+  characteristic: [
       {
         name: 'referenceNumber',
         value: record.refNo,
@@ -47,7 +45,7 @@ function toTmfCustomerBill(record) {
       },
     ],
     state: 'saved',
-    '@type': 'CustomerBill',
+    '@type': 'SaveInvoice',
   };
 }
 
