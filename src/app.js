@@ -52,10 +52,23 @@ app.get('/health', (req, res) => {
 //       routes/
 //         *.js
 //
-// All route files are loaded into one shared router.
-// ---------------------------------------------------------
+// Load each API route into its TMF router.
+// The shared router remains available for the internal compatibility path.
 const apisDir = path.join(__dirname, 'APIs');
 const router = express.Router();
+const billingRouter = express.Router();
+const paymentRouter = express.Router();
+
+const paymentApiFolders = new Set([
+  'createBillPaymentRequest',
+  'createBillPaymentRequestV2',
+  'createSaveInvoice',
+  'createUpdateSaveInvoice',
+  'createBulkUpdateInvoiceData',
+  'createGetInvoiceData',
+  'createGetPaymentLogs',
+  'createUpdatePaymentLogs',
+]);
 
 let mountedRouteFiles = 0;
 
@@ -83,8 +96,12 @@ if (fs.existsSync(apisDir)) {
       // eslint-disable-next-line global-require, import/no-dynamic-require
       const routeModule = require(routeFile);
 
-      router.use(routeModule);
+      const tmfRouter = paymentApiFolders.has(apiFolder)
+        ? paymentRouter
+        : billingRouter;
 
+      tmfRouter.use(routeModule);
+      router.use(routeModule);
       mountedRouteFiles += 1;
     }
   }
@@ -95,22 +112,14 @@ console.log(
   `[Billing] mounted ${mountedRouteFiles} route file(s) from src/APIs/*/routes/*.js`
 );
 
-// ---------------------------------------------------------
-// TMF-Aligned Gateway Routes
-//
-// Gateway forwards these paths to Billing Service :3006.
-//
 // TMF678 - Customer Bill Management
+app.use('/tmf-api/customerBillManagement/v4', billingRouter);
+app.use('/tmf-api/customerBillManagement/v1', billingRouter);
+
 // TMF676 - Payment Management
-// ---------------------------------------------------------
+app.use('/tmf-api/paymentManagement/v4', paymentRouter);
+app.use('/tmf-api/paymentManagement/v1', paymentRouter);
 
-app.use('/tmf-api/customerBillManagement/v4', router);
-// API Gateway forwards Customer Bill Management using v1 paths.
-app.use('/tmf-api/customerBillManagement/v1', router);
-
-app.use('/tmf-api/paymentManagement/v4', router);
-// API Gateway forwards Payment Management using v1 paths.
-app.use('/tmf-api/paymentManagement/v1', router);
 
 // ---------------------------------------------------------
 // Optional legacy/internal compatibility route
