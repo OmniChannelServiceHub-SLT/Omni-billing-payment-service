@@ -1,8 +1,5 @@
 // src/APIs/createBillHistoryRequestV2/mappers/billHistoryV2Mapper.js
 
-const CUSTOMER_BILL_BASE_PATH =
-  '/tmf-api/customerBillManagement/v4/customerBill';
-
 /**
  * Convert database records into the exact legacy response
  * from Excel sheet "90".
@@ -28,8 +25,6 @@ function toTmfCustomerBill(record) {
 
   return {
     id,
-
-    href: `${CUSTOMER_BILL_BASE_PATH}/${id}`,
 
     billingAccount: {
       id: record.accountNo,

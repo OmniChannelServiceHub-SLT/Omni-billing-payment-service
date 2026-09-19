@@ -1,8 +1,5 @@
 // src/APIs/createBillDownloadRequest/mappers/billDownloadRequestMapper.js
 
-const CUSTOMER_BILL_BASE_PATH =
-  '/tmf-api/customerBillManagement/v4/customerBill';
-
 function toLegacyDataBundle() {
   return null;
 }
@@ -12,8 +9,6 @@ function toTmfCustomerBill(record) {
 
   const response = {
     id,
-
-    href: `${CUSTOMER_BILL_BASE_PATH}/${id}`,
 
     billingAccount: {
       id: record.accountNo,

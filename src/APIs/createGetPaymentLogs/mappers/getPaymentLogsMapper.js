@@ -37,7 +37,6 @@ function toTmfPayment(record) {
 
   return {
     id,
-    href: `/tmf-api/paymentManagement/v4/payment/${id}`,
     amount: {
       unit: 'LKR',
       value: Number(record.amount),
