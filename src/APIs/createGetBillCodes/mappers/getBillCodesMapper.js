@@ -1,15 +1,12 @@
 // src/APIs/createGetBillCodes/mappers/getBillCodesMapper.js
 
 function toLegacyDataBundle(records) {
-  return {
-    possiblebillmodelist: records.map(
-      (record) => ({
-        bill_code: record.billCode,
-        bill_code_desc:
-          record.billCodeDescription,
-      })
-    ),
-  };
+  return records.map((record) => ({
+    bilL_HANDLING_CODE: record.billCode,
+    bilL_HANDLING_CODE_NAME:
+      record.billCodeName ?? record.billCodeDescription,
+    bilL_HANDLING_CODE_DESC: record.billCodeDescription,
+  }));
 }
 
 function toTmfBillCodes(records) {

@@ -705,6 +705,10 @@ const BillCodeSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    billCodeName: {
+      type: String,
+      trim: true,
+    },
     billCodeDescription: {
       type: String,
       required: true,
