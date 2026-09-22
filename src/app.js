@@ -62,12 +62,12 @@ const paymentRouter = express.Router();
 const paymentApiFolders = new Set([
   'createBillPaymentRequest',
   'createBillPaymentRequestV2',
-  'createSaveInvoice',
-  'createUpdateSaveInvoice',
+  'createInvoice',
+  'patchSaveInvoice',
   'createBulkUpdateInvoiceData',
-  'createGetInvoiceData',
-  'createGetPaymentLogs',
-  'createUpdatePaymentLogs',
+  'listInvoiceData',
+  'listPaymentLogs',
+  'patchPaymentLogs',
 ]);
 
 let mountedRouteFiles = 0;
