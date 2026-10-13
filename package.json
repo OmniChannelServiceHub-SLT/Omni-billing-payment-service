@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "seed": "node scripts/seedSampleData.js"
+    "seed": "node -e \"require('dotenv').config(); require('./src/config/db').seedSampleData().catch(error => { console.error(error.message); process.exitCode = 1; });\""
   },
   "dependencies": {
     "cors": "^2.8.5",
