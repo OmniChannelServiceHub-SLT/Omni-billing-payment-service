@@ -1,7 +1,7 @@
 // src/models/TMF678_BillingPayment.js
 //
 // Models for TMF678 Customer Bill Management.
-// Legacy response fields follow API_Params_SLTOMNI_V2_0_1.xlsx.
+// Source response fields follow the latest ominichannelapiList.xlsx.
 
 const mongoose = require('mongoose');
 
@@ -307,17 +307,14 @@ const EBillUserCheckSchema = new mongoose.Schema(
     },
     tpNo: {
       type: String,
-      required: true,
       trim: true,
     },
     econtact: {
       type: String,
-      required: true,
       trim: true,
     },
     econtactType: {
       type: String,
-      required: true,
       trim: true,
       uppercase: true,
     },
