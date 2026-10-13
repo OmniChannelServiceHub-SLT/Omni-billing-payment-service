@@ -62,7 +62,7 @@ const SaveInvoiceSchema = new mongoose.Schema(
     },
     initialCharge: {
       type: Number,
-      default: 0,
+      default: null,
       min: 0,
     },
     status: {
