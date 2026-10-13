@@ -52,85 +52,26 @@ app.get('/health', (req, res) => {
 //       routes/
 //         *.js
 //
-// Load each API route into its TMF router.
-// The shared router remains available for the internal compatibility path.
+// API route modules contain the complete documented /api/... path.
 const apisDir = path.join(__dirname, 'APIs');
 const router = express.Router();
-const billingRouter = express.Router();
-const paymentRouter = express.Router();
-
-const paymentApiFolders = new Set([
-  'createBillPaymentRequest',
-  'createBillPaymentRequestV2',
-  'createInvoice',
-  'patchSaveInvoice',
-  'createBulkUpdateInvoiceData',
-  'listInvoiceData',
-  'listPaymentLogs',
-  'patchPaymentLogs',
-]);
-
 let mountedRouteFiles = 0;
 
 if (fs.existsSync(apisDir)) {
-  for (const apiFolder of fs.readdirSync(apisDir)) {
+  for (const apiFolder of fs.readdirSync(apisDir).sort()) {
     const apiFolderPath = path.join(apisDir, apiFolder);
-
-    if (!fs.statSync(apiFolderPath).isDirectory()) {
-      continue;
-    }
-
+    if (!fs.statSync(apiFolderPath).isDirectory()) continue;
     const routesDir = path.join(apiFolderPath, 'routes');
-
-    if (!fs.existsSync(routesDir)) {
-      continue;
-    }
-
-    for (const file of fs.readdirSync(routesDir)) {
-      if (!file.endsWith('.js')) {
-        continue;
-      }
-
-      const routeFile = path.join(routesDir, file);
-
-      // eslint-disable-next-line global-require, import/no-dynamic-require
-      const routeModule = require(routeFile);
-
-      const tmfRouter = paymentApiFolders.has(apiFolder)
-        ? paymentRouter
-        : billingRouter;
-
-      tmfRouter.use(routeModule);
-      router.use(routeModule);
+    if (!fs.existsSync(routesDir)) continue;
+    for (const file of fs.readdirSync(routesDir).sort()) {
+      if (!file.endsWith('.js')) continue;
+      router.use(require(path.join(routesDir, file)));
       mountedRouteFiles += 1;
     }
   }
 }
-
-// eslint-disable-next-line no-console
-console.log(
-  `[Billing] mounted ${mountedRouteFiles} route file(s) from src/APIs/*/routes/*.js`
-);
-
-// TMF678 - Customer Bill Management
-app.use('/tmf-api/customerBillManagement/v4', billingRouter);
-app.use('/tmf-api/customerBillManagement/v1', billingRouter);
-
-// TMF676 - Payment Management
-app.use('/tmf-api/paymentManagement/v4', paymentRouter);
-app.use('/tmf-api/paymentManagement/v1', paymentRouter);
-
-
-// ---------------------------------------------------------
-// Optional legacy/internal compatibility route
-//
-// Keep this temporarily if team members are already calling:
-//
-// http://localhost:3006/internal-api/billing/v1/...
-//
-// You can remove it later after all consumers use Gateway/TMF paths.
-// ---------------------------------------------------------
-app.use('/internal-api/billing/v1', router);
+console.log(`[Billing] mounted ${mountedRouteFiles} route file(s) from src/APIs/*/routes/*.js`);
+app.use(router);
 
 // ---------------------------------------------------------
 // 404 Handler
@@ -158,8 +99,7 @@ app.use((err, req, res, next) => {
 
   const message =
     err.publicMessage ||
-    err.message ||
-    'An unexpected error occurred.';
+    (status === 400 ? 'Invalid request body.' : 'Request failed.');
 
   res.status(status).json({
     isSuccess: false,
