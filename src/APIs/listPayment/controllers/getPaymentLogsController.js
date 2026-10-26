@@ -25,3 +25,12 @@ async function listPayment(req, res) {
 }
 
 module.exports = { listPayment };
+
+
+const { tmfList, tmfOne } = require('../../../middleware/response.util');
+module.exports.listTmfPayment = async (req, res) => tmfList(res, req, 'payment', await service.listTmfPayment(req.query));
+module.exports.getTmfPayment = async (req, res) => tmfOne(res, req, 'payment', await service.getTmfPayment(req.params.id, req.query));
+module.exports.createTmfPayment = async (req, res) => tmfOne(res, req, 'payment', await service.createTmfPayment(req.body, req.identity), 201);
+module.exports.listTmfRefund = async (req, res) => tmfList(res, req, 'refund', await service.listTmfRefund(req.query));
+module.exports.getTmfRefund = async (req, res) => tmfOne(res, req, 'refund', await service.getTmfRefund(req.params.id, req.query));
+module.exports.createTmfRefund = async (req, res) => tmfOne(res, req, 'refund', await service.createTmfRefund(req.body, req.identity), 201);

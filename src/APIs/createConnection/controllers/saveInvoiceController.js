@@ -25,3 +25,9 @@ async function createConnection(req, res) {
 }
 
 module.exports = { createConnection };
+
+
+const { tmfList, tmfOne } = require('../../../middleware/response.util');
+module.exports.listTmfCustomerBillOnDemand = async (req, res) => tmfList(res, req, 'customerBillOnDemand', await service.listTmfCustomerBillOnDemand(req.query));
+module.exports.getTmfCustomerBillOnDemand = async (req, res) => tmfOne(res, req, 'customerBillOnDemand', await service.getTmfCustomerBillOnDemand(req.params.id, req.query));
+module.exports.createTmfCustomerBillOnDemand = async (req, res) => tmfOne(res, req, 'customerBillOnDemand', await service.createTmfCustomerBillOnDemand(req.body, req.identity), 201);

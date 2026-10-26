@@ -13,6 +13,16 @@ async function patchBillingAccount(req, res) {
       }
       input[key] = input[key].toLowerCase() === 'true';
     }
+    const guard = req.app.locals.billDeliveryGuard;
+    if (guard) {
+      if (await guard({ identity: req.identity, input, request: req }) !== true) {
+        const error = new Error('Account ownership or OTP verification failed.'); error.status = 403; throw error;
+      }
+    } else if (['development', 'test'].includes(process.env.NODE_ENV) && process.env.OTP_MODE === 'mock') {
+      res.set('X-Bill-Delivery-Verification', 'mock');
+    } else {
+      const error = new Error('Account ownership and OTP verification integration is not configured.'); error.status = 503; throw error;
+    }
     const record = await service.registerEBill(input);
     if (!record) throw new Error('Registration was not saved.');
     return success(res, { message: 'Successfully Updated.' });

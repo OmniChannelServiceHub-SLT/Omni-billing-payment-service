@@ -13,3 +13,9 @@ async function saveInvoice(input) {
   ).lean();
 }
 module.exports = { saveInvoice };
+
+
+const { TmfCustomerBillOnDemand } = require('../../../models/TMF678_BillingPayment');
+module.exports.listTmfCustomerBillOnDemand = query => TmfCustomerBillOnDemand.listTmf(query);
+module.exports.getTmfCustomerBillOnDemand = (id, query) => TmfCustomerBillOnDemand.getTmf(id, query);
+module.exports.createTmfCustomerBillOnDemand = (body, identity) => TmfCustomerBillOnDemand.createTmf(body, identity);
