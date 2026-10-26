@@ -6,4 +6,11 @@ const router = express.Router();
 // A144: preserve the documented HTTP method and source endpoint.
 router.post('/api/NewCon/SaveInvoiceData', auth, controller.createConnection);
 
+// A144: SLT business route using the team URL convention; not a standard TMF resource.
+router.post('/tmf-api/paymentManagement/v4/save-invoice', auth, controller.createConnection);
+
 module.exports = router;
+
+
+const { tmfRoutes } = require('../../../middleware/response.util');
+router.use(["/tmf-api/customerBillManagement/v4"], tmfRoutes(express, auth, 'customerBillOnDemand', { list: controller.listTmfCustomerBillOnDemand, get: controller.getTmfCustomerBillOnDemand, create: controller.createTmfCustomerBillOnDemand }));
