@@ -450,8 +450,200 @@ const sampleRecords = [
       "displayOrder": 23,
       "isActive": true
     }
+  ],
+  // A90: documented output under LOCAL sample identifiers; not captured live inputs.
+  [
+    "BillHistoryV2Item",
+    {
+      "telephoneNo": "0112053609",
+      "accountNo": "0037994858",
+      "billMonth": "10/01/2026",
+      "billViewMonth": "2026/09"
+    },
+    {
+      "billMonth": "10/01/2026",
+      "billValue": "6055.85",
+      "payments": "6700.00",
+      "outstanding": "11927.32",
+      "eBillAvailability": "Y",
+      "billCode": "24",
+      "billViewMonth": "2026/09"
+    }
+  ],
+  [
+    "BillHistoryV2Item",
+    {
+      "telephoneNo": "0112053609",
+      "accountNo": "0037994858",
+      "billMonth": "09/01/2026",
+      "billViewMonth": "2026/08"
+    },
+    {
+      "billMonth": "09/01/2026",
+      "billValue": "5885.09",
+      "payments": "9500.00",
+      "outstanding": "12571.47",
+      "eBillAvailability": "Y",
+      "billCode": "24",
+      "billViewMonth": "2026/08"
+    }
+  ],
+  [
+    "BillHistoryV2Item",
+    {
+      "telephoneNo": "0112053609",
+      "accountNo": "0037994858",
+      "billMonth": "08/01/2026",
+      "billViewMonth": "2026/07"
+    },
+    {
+      "billMonth": "08/01/2026",
+      "billValue": "6701.72",
+      "payments": "5000.00",
+      "outstanding": "16186.38",
+      "eBillAvailability": "Y",
+      "billCode": "24",
+      "billViewMonth": "2026/07"
+    }
   ]
 ];
+
+// Optional synthetic TMF fixtures, separate from the source's SLT data.
+if (process.env.TMF_DEMO_DATA === 'true') {
+  if (!['development', 'test'].includes(process.env.NODE_ENV)) {
+    throw new Error('TMF_DEMO_DATA requires NODE_ENV=development or test.');
+  }
+  const fixtures = [
+  [
+    "TmfCustomerBill",
+    {
+      "id": "dev-cb-001",
+      "@type": "CustomerBill",
+      "billNo": "DEV-0001",
+      "billDate": "2026-10-01T00:00:00.000Z",
+      "lastUpdate": "2026-10-01T00:00:00.000Z",
+      "paymentDueDate": "2026-10-24T00:00:00.000Z",
+      "category": "development-sample",
+      "state": "new",
+      "amountDue": {
+        "unit": "LKR",
+        "value": 100
+      },
+      "remainingAmount": {
+        "unit": "LKR",
+        "value": 100
+      },
+      "taxExcludedAmount": {
+        "unit": "LKR",
+        "value": 100
+      },
+      "taxIncludedAmount": {
+        "unit": "LKR",
+        "value": 100
+      },
+      "billingAccount": {
+        "id": "A0815",
+        "name": "Development CTK sample account"
+      },
+      "billingPeriod": {
+        "startDateTime": "2026-09-01T00:00:00.000Z",
+        "endDateTime": "2026-10-01T00:00:00.000Z"
+      },
+      "billDocument": [
+        {
+          "id": "dev-document-001",
+          "name": "Development attachment reference; no real bill PDF",
+          "mimeType": "application/pdf"
+        }
+      ]
+    }
+  ],
+  [
+    "TmfAppliedCustomerBillingRate",
+    {
+      "id": "dev-rate-001",
+      "@type": "AppliedCustomerBillingRate",
+      "date": "2026-10-01T00:00:00.000Z",
+      "name": "Development sample charge",
+      "description": "Synthetic development record, not a real rated SLT charge.",
+      "type": "recurring",
+      "isBilled": true,
+      "bill": {
+        "id": "dev-cb-001"
+      },
+      "billingAccount": {
+        "id": "A0815"
+      },
+      "taxExcludedAmount": {
+        "unit": "LKR",
+        "value": 100
+      },
+      "taxIncludedAmount": {
+        "unit": "LKR",
+        "value": 100
+      }
+    }
+  ],
+  [
+    "TmfPayment",
+    {
+      "id": "dev-pay-001",
+      "@type": "Payment",
+      "name": "Development payment record",
+      "description": "Synthetic development record; no money was transferred.",
+      "account": {
+        "id": "A0815"
+      },
+      "paymentMethod": {
+        "id": "DEV-METHOD-001"
+      },
+      "amount": {
+        "unit": "LKR",
+        "value": 100
+      },
+      "totalAmount": {
+        "unit": "LKR",
+        "value": 100
+      },
+      "taxAmount": {
+        "unit": "LKR",
+        "value": 0
+      },
+      "paymentDate": "2026-10-02T00:00:00.000Z",
+      "statusDate": "2026-10-02T00:00:00.000Z",
+      "status": "received"
+    }
+  ],
+  [
+    "TmfRefund",
+    {
+      "id": "dev-refund-001",
+      "@type": "Refund",
+      "name": "Development refund record",
+      "description": "Synthetic development record; no refund was executed.",
+      "account": {
+        "id": "A0815"
+      },
+      "paymentMethod": {
+        "id": "DEV-METHOD-001"
+      },
+      "payment": {
+        "id": "dev-pay-001"
+      },
+      "totalAmount": {
+        "unit": "LKR",
+        "value": 10
+      },
+      "refundDate": "2026-10-03T00:00:00.000Z",
+      "statusDate": "2026-10-03T00:00:00.000Z",
+      "status": "received"
+    }
+  ]
+];
+  for (const [model, data] of fixtures) {
+    sampleRecords.push([model, { id: data.id }, { data, revision: 0, createdBy: 'development-seed' }]);
+  }
+}
 
 module.exports.seedSampleData = async function seedSampleData() {
   if (process.env.NODE_ENV === 'production') throw new Error('Use a development database for Excel sample data.');

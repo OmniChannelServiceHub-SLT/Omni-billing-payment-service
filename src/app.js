@@ -8,6 +8,9 @@ const helmet = require('helmet');
 const cors = require('cors');
 const morgan = require('morgan');
 
+const { tmfFailure } = require('./middleware/response.util');
+const isTmfPath = req => /^\/(?:tmf-api\/(?:customerBillManagement|paymentManagement|payment)\/v4|payment\/v4)(?:\/|$)/.test(req.path);
+
 const app = express();
 
 app.disable('x-powered-by');
@@ -22,12 +25,13 @@ app.use(
         ? '*'
         : process.env.CORS_ORIGIN || '*',
     credentials: process.env.CORS_ORIGIN !== '*',
+    exposedHeaders: ['Location', 'ETag', 'X-Total-Count', 'X-Result-Count'],
   })
 );
 
 app.use(morgan('combined'));
 
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: '1mb', type: ['application/json', 'application/*+json'] }));
 app.use(express.urlencoded({ extended: true }));
 
 // ---------------------------------------------------------
@@ -77,6 +81,7 @@ app.use(router);
 // 404 Handler
 // ---------------------------------------------------------
 app.use((req, res) => {
+  if (isTmfPath(req)) return tmfFailure(res, { status: 404, message: 'No TMF resource matches this path.' });
   res.status(404).json({
     isSuccess: false,
     errorMessege: `No Billing route matches ${req.method} ${req.originalUrl}`,
@@ -96,6 +101,7 @@ app.use((err, req, res, next) => {
   console.error('[Billing]', err.stack || err.message);
 
   const status = err.status || 500;
+  if (isTmfPath(req)) return tmfFailure(res, { status, message: status === 400 ? 'Invalid request body.' : status < 500 ? err.message : 'Request failed.' });
 
   const message =
     err.publicMessage ||
