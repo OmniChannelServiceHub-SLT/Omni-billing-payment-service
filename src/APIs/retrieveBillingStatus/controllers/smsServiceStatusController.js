@@ -17,3 +17,6 @@ async function retrieveBillingStatus(req, res) {
 }
 
 module.exports = { retrieveBillingStatus };
+
+const { contractHandle,contractOne,contractList }=require('../../../middleware/response.util');
+module.exports.retrieveBillingStatus=contractHandle('retrieveBillingStatus',async(req,res)=>{const input=requiredInput(req.query,["accountNo", "tpNo"]);return contractOne(res,req,await service.statusResource(input.accountNo,input.tpNo));});

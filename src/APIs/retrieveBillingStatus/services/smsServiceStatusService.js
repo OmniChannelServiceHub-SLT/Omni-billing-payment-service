@@ -7,3 +7,11 @@ async function getSMSServiceStatus(accountNo, tpNo) {
   return status ? status.serviceAvailable : null;
 }
 module.exports = { getSMSServiceStatus };
+
+
+const { sltType }=require('../../../middleware/response.util');
+module.exports.statusResource=async(accountNo,tpNo)=>{
+ const active=await getSMSServiceStatus(accountNo,tpNo);if(active===null)return null;
+ return {id:accountNo+':'+tpNo,...sltType('SLTBillDeliveryStatus'),href:'/tmf-api/customerBillManagement/v4/sms-service-status?accountNo='+encodeURIComponent(accountNo)+'&tpNo='+encodeURIComponent(tpNo),billingAccount:{id:accountNo,'@referredType':'BillingAccount'},serviceId:tpNo,smsEnabled:active};
+};
+
