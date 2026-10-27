@@ -24,3 +24,7 @@ const { tmfList, tmfOne } = require('../../../middleware/response.util');
 module.exports.listTmfCustomerBill = async (req, res) => tmfList(res, req, 'customerBill', await service.listTmfCustomerBill(req.query));
 module.exports.getTmfCustomerBill = async (req, res) => tmfOne(res, req, 'customerBill', await service.getTmfCustomerBill(req.params.id, req.query));
 module.exports.patchTmfCustomerBill = async (req, res) => tmfOne(res, req, 'customerBill', await service.patchTmfCustomerBill(req.params.id, req.body, req.get('If-Match')));
+
+
+const { contractHandle,contractOne,contractList }=require('../../../middleware/response.util');
+module.exports.listCustomerBill=contractHandle('listCustomerBill',async(req,res)=>{const input=requiredInput(req.query,["telephoneNo", "accountNo"]);return contractList(res,req,await service.historyList(input.telephoneNo,input.accountNo));});

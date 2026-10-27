@@ -19,3 +19,6 @@ module.exports = router;
 
 const { tmfRoutes } = require('../../../middleware/response.util');
 router.use(["/tmf-api/customerBillManagement/v4"], tmfRoutes(express, auth, 'customerBill', { list: controller.listTmfCustomerBill, get: controller.getTmfCustomerBill, patch: controller.patchTmfCustomerBill }));
+
+const {contractHandle,contractOne}=require('../../../middleware/response.util');
+router.get('/tmf-api/customerBillManagement/v4/bill-history-v2/:id',auth,contractHandle('listCustomerBill',async(req,res)=>{const service=require('../services/billHistoryV2Service');const data=await(async()=>{return service.historyGet(req.params.id);})();return contractOne(res,req,data);}));
