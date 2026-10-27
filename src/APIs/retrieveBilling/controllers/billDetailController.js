@@ -22,3 +22,8 @@ module.exports = { retrieveBilling };
 const { tmfList, tmfOne } = require('../../../middleware/response.util');
 module.exports.listTmfAppliedCustomerBillingRate = async (req, res) => tmfList(res, req, 'appliedCustomerBillingRate', await service.listTmfAppliedCustomerBillingRate(req.query));
 module.exports.getTmfAppliedCustomerBillingRate = async (req, res) => tmfOne(res, req, 'appliedCustomerBillingRate', await service.getTmfAppliedCustomerBillingRate(req.params.id, req.query));
+
+
+
+const { contractHandle,contractOne,contractList }=require('../../../middleware/response.util');
+module.exports.retrieveBilling=contractHandle('retrieveBilling',async(req,res)=>{const input=requiredInput(req.query,["telephoneNo", "accountNo"]);return contractOne(res,req,await service.getBillingSummary(input.telephoneNo,input.accountNo));});
