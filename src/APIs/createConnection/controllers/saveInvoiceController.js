@@ -1,5 +1,5 @@
 const service = require('../services/saveInvoiceService');
-const { success, failure, envelope, requiredInput } = require('../../../middleware/response.util');
+const { contractOne, success, failure, envelope, requiredInput } = require('../../../middleware/response.util');
 
 async function createConnection(req, res) {
   try {
@@ -14,10 +14,11 @@ async function createConnection(req, res) {
     }
     const record = await service.saveInvoice(input);
     if (!record) throw new Error('Invoice was not saved.');
-    return success(res);
+    res.set('X-Contract-Status','interim-unconfirmed-invoice-classification');
+    return contractOne(res,req,service.invoiceResource(record));
   } catch (error) {
     const status = error.status || 500;
-    return failure(res, {
+    return require('../../../middleware/response.util').tmfFailure(res, {
       status, errorCode: `E${status}`,
       message: error.status ? error.message : 'Request failed.',
     });
@@ -31,3 +32,7 @@ const { tmfList, tmfOne } = require('../../../middleware/response.util');
 module.exports.listTmfCustomerBillOnDemand = async (req, res) => tmfList(res, req, 'customerBillOnDemand', await service.listTmfCustomerBillOnDemand(req.query));
 module.exports.getTmfCustomerBillOnDemand = async (req, res) => tmfOne(res, req, 'customerBillOnDemand', await service.getTmfCustomerBillOnDemand(req.params.id, req.query));
 module.exports.createTmfCustomerBillOnDemand = async (req, res) => tmfOne(res, req, 'customerBillOnDemand', await service.createTmfCustomerBillOnDemand(req.body, req.identity), 201);
+
+
+
+module.exports.createConnection=require('../../../middleware/response.util').contractHandle('createConnection',module.exports.createConnection);
