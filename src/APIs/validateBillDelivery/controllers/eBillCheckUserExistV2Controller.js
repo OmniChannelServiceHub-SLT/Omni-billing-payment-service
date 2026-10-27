@@ -22,3 +22,8 @@ async function validateBillDelivery(req, res) {
 }
 
 module.exports = { validateBillDelivery };
+
+
+
+const { contractHandle,contractOne,contractList }=require('../../../middleware/response.util');
+module.exports.validateBillDelivery=contractHandle('validateBillDelivery',async(req,res)=>{const input=requiredInput(req.query,["accountNo"]);return contractOne(res,req,await service.validateDelivery(input.accountNo,req.app.locals.otpProvider));});
