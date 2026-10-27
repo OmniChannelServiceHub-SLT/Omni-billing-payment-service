@@ -10,3 +10,6 @@ router.get('/api/ebill/GetBillCodes', auth, controller.listBillPresentation);
 router.get('/tmf-api/customerBillManagement/v4/bill-codes', auth, controller.listBillPresentation);
 
 module.exports = router;
+
+const {contractHandle,contractOne}=require('../../../middleware/response.util');
+router.get('/tmf-api/customerBillManagement/v4/bill-codes/:id',auth,contractHandle('listBillPresentation',async(req,res)=>{const service=require('../services/getBillCodesService');const data=await(async()=>{return service.mediaGet(req.params.id);})();return contractOne(res,req,data);}));
