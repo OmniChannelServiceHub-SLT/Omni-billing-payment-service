@@ -17,3 +17,6 @@ async function retrieveBillingRequest(req, res) {
 }
 
 module.exports = { retrieveBillingRequest };
+
+const { contractHandle,contractOne,contractList }=require('../../../middleware/response.util');
+module.exports.retrieveBillingRequest=contractHandle('retrieveBillingRequest',async(req,res)=>{const input=requiredInput(req.query,["accountNo", "tpNo"]);return contractOne(res,req,await service.preference(input.accountNo,input.tpNo));});
