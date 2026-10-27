@@ -1,983 +1,292 @@
 # OmniChannel Billing & Payment Service
 
-The OmniChannel Billing & Payment Service provides billing, invoice, eBill, and payment-related operations for the SLT OmniChannel platform.
+The Billing & Payment Service provides billing enquiries, bill history, eBill delivery preferences, payment enquiries, payment audit logs and invoice record handling for the OmniChannel platform. It exposes 12 business APIs and separate TMF678 Customer Bill Management and TMF676 Payment Management resource endpoints.
+
+The service runs on **http://localhost:3006** by default and stores its records in MongoDB. Protected APIs accept a JWT bearer token issued by the platform's authentication service.
+
+## What the service does
+
+- Retrieves a customer's billing summary, outstanding balance, product details and package usage information.
+- Lists historical billing details for a customer account.
+- Registers eBill delivery preferences and retrieves eBill, SMS service and bill delivery status.
+- Checks eBill registration information through the existing validation operation.
+- Retrieves bill payment summaries and payment audit logs.
+- Saves invoice records for connection-related requests.
+- Provides an interim invoice-update acknowledgement in development mock mode.
+- Exposes customer bill, applied billing rate, bill-on-demand, payment and refund resources through the implemented TMF678 and TMF676 routes.
+
+Some operations currently use seeded development data or explicit mocks. See [Current implementation boundaries](#current-implementation-boundaries) for their behaviour.
+
+## Technology
+
+| Component | Technology |
+| --- | --- |
+| Runtime | Node.js; package engine requirement: 18 or later |
+| HTTP API | Express |
+| Database | MongoDB with Mongoose |
+| Authentication | JWT bearer tokens, verified using HS256 |
+| Schema validation | AJV and ajv-formats |
+| HTTP middleware | Helmet, CORS and Morgan |
+| Manual API testing | Postman |
+| Resource conformance testing | TMF678 and TMF676 CTKs |
+
+## Business APIs
+
+The following are the **12 active API folders** under `src/APIs`. Method names identify the existing project modules; use the HTTP method shown in the table when sending a request.
+
+All paths below are relative to **http://localhost:3006**.
+
+| ID | API module | Method | Path | Purpose |
+| --- | --- | --- | --- | --- |
+| A14 | `retrieveBilling` | GET | `/tmf-api/customerBillManagement/v4/bill-detail` | Retrieve billing, product and package usage details. |
+| A21 | `patchBillingAccount` | POST | `/tmf-api/customerBillManagement/v4/ebill-registration` | Save eBill delivery preferences, subject to ownership/OTP verification or explicit development mock mode. |
+| A22 | `retrieveBillingRequest` | GET | `/tmf-api/customerBillManagement/v4/ebill-status` | Retrieve eBill registration and delivery preferences. |
+| A23 | `retrieveBillingStatus` | GET | `/tmf-api/customerBillManagement/v4/sms-service-status` | Retrieve SMS billing service status. |
+| A28 | `retrieveBillingPayment` | GET | `/tmf-api/paymentManagement/v4/bill-payment` | Retrieve the account's bill payment summary. |
+| A90 | `listCustomerBill` | GET | `/tmf-api/customerBillManagement/v4/bill-history-v2` | List historical billing details for an account. |
+| A98 | `validateBillDelivery` | GET | `/tmf-api/customerBillManagement/v4/ebill-check-user-exist-v2` | Check eBill user information; identify mocked OTP delivery explicitly. |
+| A114 | `listPayment` | GET | `/tmf-api/paymentManagement/v4/payment-logs` | Retrieve payment audit events by order reference. |
+| A144 | `createConnection` | POST | `/tmf-api/paymentManagement/v4/save-invoice` | Save or update an invoice record using its source reference. |
+| A145 | `UpdateInvoiceData` | POST | `/internal-api/billingPayment/v4/update-invoice` | Return an interim development acknowledgement; currently performs no invoice update. |
+| A147 | `retrieveBillAccount` | GET | `/tmf-api/customerBillManagement/v4/bill-status` | Retrieve account bill delivery status and contact preferences. |
+| A148 | `listBillPresentation` | GET | `/tmf-api/customerBillManagement/v4/bill-codes` | List configured bill presentation codes. |
+
+### Request inputs
+
+Parameter names are case-sensitive. Use the matching Postman collection for complete request examples.
+
+| API | Input location | Fields |
+| --- | --- | --- |
+| A14, A28, A90 | Query | `telephoneNo`, `accountNo` |
+| A21 | Query | `eventSource`, `newEmailAddress`, `newContactNumber`, `accountNumber`, `isEnableSms`, `isAlreadyRegistered`, `isPrestigeCustomer` |
+| A22, A23, A147 | Query | `accountNo`, `tpNo` |
+| A98 | Query | `accountNo` |
+| A114 | Query | `orderreff` |
+| A144 | JSON body | `REF_NO`, `SERVICE_TYPE`, `PACKAGE_NAME`, `PACKAGE_COUNT`, `RENTAL`, `INI_CHARGE`, `STATUS` |
+| A145 | Query | `REF_NO` |
+| A148 | None | No business query parameters. |
+
+A21 accepts case-insensitive `True` or `False` values for its three boolean query fields. Despite its module name, its current HTTP operation is **POST**.
+
+## Standard resource endpoints
+
+The service also implements resource operations under these base paths:
+
+| API | Base URL | Resource | Implemented operations |
+| --- | --- | --- | --- |
+| TMF678 | `http://localhost:3006/tmf-api/customerBillManagement/v4/` | `customerBill` | List, retrieve by ID and PATCH by ID. |
+| TMF678 | Same as above | `appliedCustomerBillingRate` | List and retrieve by ID. |
+| TMF678 | Same as above | `customerBillOnDemand` | Create, list and retrieve by ID. |
+| TMF676 | `http://localhost:3006/tmf-api/paymentManagement/v4/` | `payment` | Create, list and retrieve by ID. |
+| TMF676 | Same as above | `refund` | Create, list and retrieve by ID. |
+
+These resources are separate from the 12 custom business operations. A TMF-style URL prefix and resource response format do not make a custom operation an official TM Forum operation. CTK results apply to the resource operations exercised by the corresponding test kit.
+
+## Project structure
+
+| Location | Responsibility |
+| --- | --- |
+| `server.js` | Load configuration, connect to MongoDB and start the HTTP server. |
+| `src/app.js` | Configure Express middleware, health checks, schema routes and API route discovery. |
+| `src/APIs/<API>/routes/` | Define HTTP routes and authentication middleware. |
+| `src/APIs/<API>/controllers/` | Validate request inputs and return API responses. |
+| `src/APIs/<API>/services/` | Read or write source records and implement business behaviour. |
+| `src/models/` | Define billing, payment and TMF resource models. |
+| `src/config/db.js` | Manage database connection and development sample seeding. |
+| `src/middleware/auth.middleware.js` | Verify JWT bearer tokens. |
+| `src/middleware/response.util.js` | Provide shared response, error, authorization and extension schema utilities. |
+
+The application automatically loads JavaScript route files from `src/APIs/*/routes/`. Controllers, routes and services remain inside their existing API folders; no separate mapper layer is required.
+
+## Local setup
+
+### 1. Get the project and install dependencies
 
-The service is implemented using Node.js, Express, and MongoDB. It supports client-defined legacy responses and TM Forum-aligned responses based on:
-
-* TMF678 Customer Bill Management API v4
-* TMF676 Payment Management API v4
-
-The service can be accessed directly on port `3006` or through the OmniChannel API Gateway on port `8080`.
-
----
-
-## Table of Contents
-
-1. [Technology Stack](#technology-stack)
-2. [Project Architecture](#project-architecture)
-3. [Project Structure](#project-structure)
-4. [TM Forum Alignment](#tm-forum-alignment)
-5. [Implemented API Modules](#implemented-api-modules)
-6. [Prerequisites](#prerequisites)
-7. [Installation](#installation)
-8. [Environment Configuration](#environment-configuration)
-9. [Running the Service](#running-the-service)
-10. [Health Checks](#health-checks)
-11. [Authentication](#authentication)
-12. [API URLs](#api-urls)
-13. [Response Formats](#response-formats)
-14. [Postman Testing](#postman-testing)
-15. [TMF678 CTK Testing](#tmf678-ctk-testing)
-16. [TMF676 CTK Testing](#tmf676-ctk-testing)
-17. [Known CTK Limitations](#known-ctk-limitations)
-18. [Validation Commands](#validation-commands)
-19. [Git Workflow](#git-workflow)
-20. [Local DNS Workaround](#local-dns-workaround)
-21. [Security Guidelines](#security-guidelines)
-
----
-
-## Technology Stack
-
-* Node.js
-* Express.js
-* MongoDB
-* Mongoose
-* JSON Web Token authentication
-* Postman
-* Newman
-* Docker for the supplied TMF676 CTK
-* TM Forum Open API specifications
-
----
-
-## Project Architecture
-
-The Billing & Payment Service follows a layered module structure.
-
-Each API module contains:
-
-* Routes
-* Controllers
-* Services
-* Mappers
-
-The responsibilities of each layer are:
-
-### Routes
-
-Routes define HTTP methods, endpoint paths, authentication middleware, and controller functions.
-
-### Controllers
-
-Controllers validate requests, call service functions, select response formats, and return HTTP responses.
-
-### Services
-
-Services contain database access and business operations.
-
-### Mappers
-
-Mappers convert database records into:
-
-* TM Forum-aligned responses
-* Legacy responses based on the supplied Excel response definitions
-
-### Models
-
-Mongoose schemas and models are separated by TM Forum API:
-
-```text
-src/models/TMF678_BillingPayment.js
-src/models/TMF676_Payment.js
-```
-
----
-
-## Project Structure
-
-```text
-Omni-billing-payment-service/
-│
-├── src/
-│   ├── APIs/
-│   │   ├── createBillDetailRequest/
-│   │   ├── createBillHistoryRequest/
-│   │   ├── createBillHistoryRequestV2/
-│   │   ├── createBillPaymentRequest/
-│   │   ├── createBillPaymentRequestV2/
-│   │   ├── createEBillStatusRequest/
-│   │   ├── createBillStatusRequest/
-│   │   ├── createSMSServiceStatusRequest/
-│   │   ├── createEBillCheckUserExist/
-│   │   ├── createEBillCheckUserExistV2/
-│   │   ├── createEBillRegistration/
-│   │   ├── createSmartBillRegistrationSorce/
-│   │   ├── createSmartBillRegistration/
-│   │   ├── createSmartBillSendRequest/
-│   │   ├── createEBillResendRequest/
-│   │   ├── createEBillDownloadRequest/
-│   │   ├── createBillDownloadRequest/
-│   │   ├── listBillCodes/
-│   │   ├── createInvoice/
-│   │   ├── patchSaveInvoice/
-│   │   ├── createBulkUpdateInvoiceData/
-│   │   ├── listInvoiceData/
-│   │   ├── listPaymentLogs/
-│   │   └── patchPaymentLogs/
-│   │
-│   ├── config/
-│   │   └── db.js
-│   │
-│   ├── middleware/
-│   │   ├── auth.middleware.js
-│   │   └── response.util.js
-│   │
-│   ├── models/
-│   │   ├── TMF678_BillingPayment.js
-│   │   └── TMF676_Payment.js
-│   │
-│   └── app.js
-│
-├── .env
-├── .gitignore
-├── package.json
-├── package-lock.json
-├── README.md
-└── server.js
-```
-
-The application automatically discovers route files from:
-
-```text
-src/APIs/*/routes/*.js
-```
-
-Each route is mounted on the relevant TMF678 or TMF676 router.
-
----
-
-## TM Forum Alignment
-
-The service separates Customer Bill Management and Payment Management operations.
-
-### TMF678 Customer Bill Management
-
-TMF678 operations are mounted under:
-
-```text
-/tmf-api/customerBillManagement/v4
-```
-
-The API Gateway currently exposes the service using:
-
-```text
-/tmf-api/customerBillManagement/v1
-```
-
-### TMF676 Payment Management
-
-TMF676 operations are mounted under:
-
-```text
-/tmf-api/paymentManagement/v4
-```
-
-The API Gateway currently exposes the service using:
-
-```text
-/tmf-api/paymentManagement/v1
-```
-
-### API Naming Convention
-
-Module folder names and controller method names follow the `Proposed TMF-Aligned Method Name` column in `billing(4).xlsx`.
-
-The following method-name corrections have been applied:
-
-| Existing API      | TMF-aligned method name |
-| ----------------- | ----------------------- |
-| GetBillCodes      | `listBillCodes`         |
-| SaveInvoice       | `createInvoice`         |
-| UpdateSaveInvoice | `patchSaveInvoice`      |
-| GetInvoiceData    | `listInvoiceData`       |
-| GetPaymentLogs    | `listPaymentLogs`       |
-| UpdatePaymentLogs | `patchPaymentLogs`      |
-
-GET collection operations use `list`, create operations use `create`, and update operations use `patch` where specified by the approved mapping.
-
----
-
-## Implemented API Modules
-
-The service currently contains 24 API modules.
-
-### TMF678 Customer Bill Management Modules
-
-| No. | Excel API name              | TMF-aligned module/method          |
-| --: | --------------------------- | ---------------------------------- |
-|   1 | BillDetailRequest           | `createBillDetailRequest`          |
-|   2 | BillHistoryRequest          | `createBillHistoryRequest`         |
-|   3 | BillHistoryRequestV2        | `createBillHistoryRequestV2`       |
-|   4 | eBillStatusRequest          | `createEBillStatusRequest`         |
-|   5 | BillStatusRequest           | `createBillStatusRequest`          |
-|   6 | SMSServiceStatusRequest     | `createSMSServiceStatusRequest`    |
-|   7 | eBillCheckUserExist         | `createEBillCheckUserExist`        |
-|   8 | eBillCheckUserExistV2       | `createEBillCheckUserExistV2`      |
-|   9 | eBillRegistration           | `createEBillRegistration`          |
-|  10 | SmartBillRegistration Sorce | `createSmartBillRegistrationSorce` |
-|  11 | SmartBillRegistration       | `createSmartBillRegistration`      |
-|  12 | SmartBillSendRequest        | `createSmartBillSendRequest`       |
-|  13 | eBillResendRequest          | `createEBillResendRequest`         |
-|  14 | eBillDownloadRequest        | `createEBillDownloadRequest`       |
-|  15 | BillDownloadRequest         | `createBillDownloadRequest`        |
-|  16 | GetBillCodes                | `listBillCodes`                    |
-
-The spelling `Sorce` is retained because it appears in the approved mapping and existing client API name.
-
-### TMF676 Payment Management Modules
-
-| No. | Excel API name        | TMF-aligned module/method     |
-| --: | --------------------- | ----------------------------- |
-|   1 | BillPaymentRequest    | `createBillPaymentRequest`    |
-|   2 | BillPaymentRequestV2  | `createBillPaymentRequestV2`  |
-|   3 | SaveInvoice           | `createInvoice`               |
-|   4 | UpdateSaveInvoice     | `patchSaveInvoice`            |
-|   5 | BulkUpdateInvoiceData | `createBulkUpdateInvoiceData` |
-|   6 | GetInvoiceData        | `listInvoiceData`             |
-|   7 | GetPaymentLogs        | `listPaymentLogs`             |
-|   8 | UpdatePaymentLogs     | `patchPaymentLogs`            |
-
----
-
-## Prerequisites
-
-Install or configure the following before running the service:
-
-* Node.js
-* npm
-* MongoDB or MongoDB Atlas
-* Git
-* Postman
-* OmniChannel IAM Service
-* OmniChannel API Gateway
-* Docker Desktop for the supplied TMF676 CTK
-
-Verify Node.js and npm:
-
-```cmd
-node --version
-npm --version
-```
-
-Verify Git:
-
-```cmd
-git --version
-```
-
-Verify Docker when running the TMF676 CTK:
-
-```cmd
-docker --version
-docker info
-```
-
----
-
-## Installation
-
-Clone the repository:
+For a new checkout:
 
 ```cmd
 git clone https://github.com/OmniChannelServiceHub-SLT/Omni-billing-payment-service.git
-```
-
-Open the project:
-
-```cmd
 cd Omni-billing-payment-service
+git switch dev
+npm ci
 ```
 
-Install dependencies:
+For an existing checkout, open its project directory and run `npm ci` after updating the code. Keep the existing `.git` directory and private configuration.
+
+### 2. Configure the environment
+
+Create a private `.env` file in the project root, or retain your existing working file. Replace the placeholders below with your own local values:
+
+```dotenv
+PORT=3006
+MONGODB_URI=<your MongoDB connection string>
+JWT_ACCESS_SECRET=<secret configured for the platform authentication service>
+NODE_ENV=development
+OTP_MODE=mock
+INTERIM_MODE=mock
+TMF_DEMO_DATA=true
+BILLING_CURRENCY=LKR
+```
+
+| Setting | Purpose |
+| --- | --- |
+| `PORT` | HTTP port; defaults to `3006`. |
+| `MONGODB_URI` | Required MongoDB connection string. |
+| `JWT_ACCESS_SECRET` | Secret used to verify platform access tokens. |
+| `NODE_ENV` | Runtime environment; use `development` for local sample testing. |
+| `OTP_MODE` | `mock` enables the existing development/test verification fallback; it does not send a real OTP. |
+| `INTERIM_MODE` | `mock` enables supported interim development behaviour. |
+| `TMF_DEMO_DATA` | Optional development/test resource fixtures for CTK testing; set to `true` before running the seed command. |
+| `BILLING_CURRENCY` | Currency for business Money values; defaults to `LKR`. |
+| `TMF_PUBLIC_ORIGIN` | Optional public origin used when constructing resource links. |
+| `CORS_ORIGIN` | Optional allowed browser origin configuration. |
+
+Do not commit `.env`, MongoDB credentials, JWT secrets, passwords or exported access tokens.
+
+### 3. Seed a development database
 
 ```cmd
-npm install
+npm run seed
 ```
 
-Do not commit the `node_modules` directory.
+An existing seeded database can be reused. Enable `TMF_DEMO_DATA=true` only when development/test resource fixtures are needed. Sample data and fixtures are for local testing, not customer production records.
 
----
+### 4. Start the service
 
-## Environment Configuration
-
-Create or update the local `.env` file with the environment values required by the project.
-
-Example structure:
-
-```env
-PORT=3006
-MONGODB_URI=<MongoDB connection string>
-JWT_SECRET=<shared JWT secret>
-CORS_ORIGIN=*
-NODE_ENV=development
+```cmd
+npm start
 ```
 
-Use the exact environment variable names expected by the project configuration.
-
-Do not commit:
-
-* Access tokens
-* Passwords
-* MongoDB credentials
-* JWT secrets
-* Private keys
-* Production configuration values
-
-The `.env` file must remain excluded through `.gitignore`.
-
----
-
-## Running the Service
-
-Start the service from the project root:
+Alternatively:
 
 ```cmd
 node server.js
 ```
 
-A successful startup displays output similar to:
+For development with automatic restart:
 
-```text
-[Billing] mounted 24 route file(s) from src/APIs/*/routes/*.js
-Billing & Payment Service connected to MongoDB (billing_payment_db)
-OmniChannel Billing & Payment Service listening on port 3006
+```cmd
+npm run dev
 ```
 
-Keep this terminal open while testing the APIs.
+The startup log should show 12 mounted API route files and a successful database connection. Check the running service at:
 
-### Required Integration Services
+```text
+http://localhost:3006/health
+```
 
-For API Gateway testing, keep the following services running:
+## Authentication and Postman
 
-1. IAM Service
-2. Billing & Payment Service
-3. OmniChannel API Gateway
-4. MongoDB connection
+1. Start the platform authentication service and any gateway required by your local setup.
+2. Import `Billing_Payment_12_Resource_Responses.postman_collection.json`.
+3. Enter your own credentials in the collection's Setup requests and obtain an access token.
+4. Set the collection's `accessToken` value locally, or use the token captured by its Setup flow.
+5. Run the 12 business API folders and inspect both the response body and test results.
 
----
-
-## Health Checks
-
-### Direct Billing Service
+Protected requests use:
 
 ```http
-GET http://localhost:3006/health
-```
-
-Expected response:
-
-```json
-{
-  "status": "UP",
-  "service": "omnichannel-billing-payment-service",
-  "port": 3006
-}
-```
-
-### API Gateway
-
-```http
-GET http://localhost:8080/health
-```
-
-Expected response:
-
-```json
-{
-  "status": "UP",
-  "service": "omnichannel-api-gateway",
-  "port": 8080
-}
-```
-
-A correlation ID may also be included in the Gateway response.
-
----
-
-## Authentication
-
-Protected endpoints require an IAM bearer token.
-
-Example header:
-
-```http
-Authorization: Bearer <ACCESS_TOKEN>
-```
-
-Obtain a valid access token from the IAM login endpoint before testing protected routes.
-
-Do not store literal bearer tokens in:
-
-* Source files
-* README files
-* Git commits
-* Shared Postman collections
-* CTK files committed to the repository
-
-Use a Postman environment variable such as:
-
-```text
-{{access_token}}
-```
-
-Expired or invalid tokens return:
-
-```text
-401 Unauthorized
-```
-
----
-
-## API URLs
-
-### Direct TMF678 URL
-
-```text
-http://localhost:3006/tmf-api/customerBillManagement/v4/
-```
-
-### Gateway TMF678 URL
-
-```text
-http://localhost:8080/tmf-api/customerBillManagement/v1/
-```
-
-### Direct TMF676 URL
-
-```text
-http://localhost:3006/tmf-api/paymentManagement/v4/
-```
-
-### Gateway TMF676 URL
-
-```text
-http://localhost:8080/tmf-api/paymentManagement/v1/
-```
-
-The direct service uses the TM Forum-aligned `v4` paths. The current Gateway configuration exposes corresponding `v1` paths.
-
----
-
-## Response Formats
-
-The service supports two response formats.
-
-### Default TMF-Aligned Response
-
-Do not send the `x-response-format` header when requesting the default TMF-aligned response.
-
-Example:
-
-```http
+Authorization: Bearer <accessToken>
 Accept: application/json
-Authorization: Bearer <ACCESS_TOKEN>
 ```
 
-### Legacy Response
+For JSON request bodies, also send `Content-Type: application/json`. The collection contains four Setup requests and exactly 12 business API folders. Billing URLs use literal `http://localhost:3006`.
 
-Send the following header to request the Excel-aligned legacy response:
+Example billing enquiry using seeded development account data:
 
-```http
-x-response-format: legacy
+```text
+GET http://localhost:3006/tmf-api/customerBillManagement/v4/bill-detail?telephoneNo=0112053609&accountNo=0037994858
 ```
 
-Example legacy response structure:
+## Responses and errors
+
+Business success responses are resource objects or arrays. Depending on the resource, they include identifiers, resource links, type information, account references and numeric Money values. Business-specific resources use explicit SLT extension types, such as `SLTBillingSummary` and `SLTCustomerBillHistory`.
+
+Extension schemas are available at:
+
+```text
+http://localhost:3006/internal-api/billingPayment/v4/schema/<type>
+```
+
+Money values use a currency and a numeric amount, for example:
 
 ```json
-{
-  "isSuccess": true,
-  "errorMessege": null,
-  "exceptionDetail": null,
-  "dataBundle": {},
-  "errorShow": null,
-  "errorCode": null
-}
+{"unit": "LKR", "value": 2500}
 ```
 
-Legacy field names and spelling are retained when required by the supplied Excel response definitions.
+Handled business and TMF errors use `code`, `reason`, `message` and `status`. Check HTTP status codes as well as response bodies: a successful HTTP response alone does not establish that the returned business data is correct.
 
----
+## CTK testing
 
-## Postman Testing
+Keep the billing service running with a reachable database and valid authorization for the test requests. Use development resource fixtures when the CTK needs sample resources.
 
-The Postman collection contains requests for:
+### TMF678
 
-* Direct service testing
-* API Gateway testing
-* Default TMF-aligned responses
-* Legacy responses
-
-### Direct Request Rules
-
-Use:
-
-```text
-Port: 3006
-Version: v4
-```
-
-Examples:
-
-```text
-http://localhost:3006/tmf-api/customerBillManagement/v4/
-http://localhost:3006/tmf-api/paymentManagement/v4/
-```
-
-### Gateway Request Rules
-
-Use:
-
-```text
-Port: 8080
-Version: v1
-```
-
-Examples:
-
-```text
-http://localhost:8080/tmf-api/customerBillManagement/v1/
-http://localhost:8080/tmf-api/paymentManagement/v1/
-```
-
-### Request Pair Validation
-
-When comparing a direct request and its Gateway copy:
-
-* Use the same HTTP method.
-* Use the same query parameters.
-* Use the same request body.
-* Use the same valid access token.
-* Use the same `x-response-format` setting.
-* Compare status codes and response bodies.
-
-### Legacy Testing
-
-Enable:
-
-```http
-x-response-format: legacy
-```
-
-on both direct and Gateway requests when testing legacy responses.
-
-### TMF Testing
-
-Disable the legacy header on both requests when testing TMF-aligned responses.
-
----
-
-## TMF678 CTK Testing
-
-The supplied TMF678 CTK can run locally using Newman.
-
-Example CTK folder:
-
-```text
-C:\Projects\TMF678_Customer_Bill_V4-0-0
-```
-
-Important files include:
-
-```text
-config.json
-ctk/
-Windows-Bat-RUNCTK.bat
-Windows-PowerShell-RUNCTK.ps1
-Mac-Linux-RUNCTK.sh
-htmlResults.html
-jsonResults.json
-```
-
-### TMF678 Direct-Service Configuration
-
-```json
-{
-  "url": "http://127.0.0.1:3006/tmf-api/customerBillManagement/v4/",
-  "headers": {
-    "Accept": "application/json",
-    "Content-Type": "application/json",
-    "Authorization": "Bearer <ACCESS_TOKEN>"
-  }
-}
-```
-
-### TMF678 Gateway Configuration
-
-```json
-{
-  "url": "http://127.0.0.1:8080/tmf-api/customerBillManagement/v1/",
-  "headers": {
-    "Accept": "application/json",
-    "Content-Type": "application/json",
-    "Authorization": "Bearer <ACCESS_TOKEN>"
-  }
-}
-```
-
-Use `127.0.0.1` instead of `localhost` if the bundled Newman version reports an invalid IP address error.
-
-### Running TMF678 CTK
-
-Keep the Billing Service and, for Gateway testing, the API Gateway running.
-
-Run:
+From the existing Windows CTK installation:
 
 ```cmd
-cd C:\Projects\TMF678_Customer_Bill_V4-0-0
-Windows-Bat-RUNCTK.bat
+cd /d C:\Projects\TMF678_Customer_Bill_V4-0-0\ctk
+npm start
 ```
 
-The generated reports are:
+Configure its environment base URL as:
 
 ```text
-htmlResults.html
-jsonResults.json
+http://127.0.0.1:3006/tmf-api/customerBillManagement/v4/
 ```
 
-### TMF678 CTK Result Interpretation
+### TMF676
 
-The CTK tests standard resources, response schemas, field filtering, status codes, and error handling.
-
-A failed assertion may be a secondary failure. For example, if an initial request fails and does not set an ID variable, later ID filtering and PATCH tests may also fail.
-
-Review the first failed request before fixing later failures.
-
----
-
-## TMF676 CTK Testing
-
-The supplied TMF676 CTK package uses Docker.
-
-Example CTK folder:
+Start Docker Desktop. In the CTK's `config.json`, configure its `url` as:
 
 ```text
-C:\Projects\tmf676-v4.0.0-ctk-1.0.1
+http://host.docker.internal:3006/tmf-api/paymentManagement/v4/
 ```
 
-Important files include:
-
-```text
-.env
-config.json
-docker-compose.yaml
-README.md
-run.bat
-run.sh
-```
-
-The supplied Docker image is:
-
-```text
-tmforumorg/tmf676-v4.0.0-ctk:1.0.1
-```
-
-### Docker Requirement
-
-Docker Desktop must be installed and running.
-
-Verify Docker:
+Retain the required CTK payloads and provide a valid bearer token through its headers. Then run:
 
 ```cmd
-docker --version
-docker info
-```
-
-The supplied TMF676 CTK package cannot run without Docker because the CTK collection and runner files are stored inside the Docker image.
-
-### TMF676 Gateway Configuration
-
-Because the CTK runs inside a Docker container, do not use `127.0.0.1` to access services running on the Windows host.
-
-Use:
-
-```json
-{
-  "url": "http://host.docker.internal:8080/tmf-api/paymentManagement/v1/",
-  "headers": {
-    "Accept": "application/json",
-    "Content-Type": "application/json",
-    "Authorization": "Bearer <ACCESS_TOKEN>"
-  }
-}
-```
-
-Inside a Docker container, `127.0.0.1` refers to the container itself. `host.docker.internal` refers to the Windows host.
-
-### Running TMF676 CTK
-
-Start:
-
-1. IAM Service
-2. Billing & Payment Service
-3. API Gateway
-4. Docker Desktop
-
-Then run:
-
-```cmd
-cd C:\Projects\tmf676-v4.0.0-ctk-1.0.1
+cd /d C:\Projects\tmf676-v4.0.0-ctk-1.0.1
 run.bat
 ```
 
-The generated report is written to:
-
-```text
-reports/htmlResults.html
-```
-
----
-
-## Known CTK Limitations
-
-The 24 implemented APIs are based on the approved client mapping in `billing(4).xlsx`.
-
-The official full TMF678 CTK also tests standard resources that are not currently part of the client-defined 24-API scope:
-
-```text
-/customerBillOnDemand
-/appliedCustomerBillingRate
-```
-
-The CTK expects operations such as:
-
-```text
-POST /customerBillOnDemand
-GET  /customerBillOnDemand
-GET  /customerBillOnDemand/:id
-
-GET  /appliedCustomerBillingRate
-GET  /appliedCustomerBillingRate/:id
-```
-
-Until these standard resources are implemented, the corresponding full CTK tests may return `404` and fail.
-
-Do not remove CTK tests or change expected results to create an artificial passing report. A modified CTK report is not valid evidence of full TM Forum compliance.
-
-The missing resources can be added later as separate CTK-compliance modules without modifying the existing client-defined API contracts.
-
----
-
-## Validation Commands
-
-### Check One JavaScript File
-
-```cmd
-node --check path\to\file.js
-```
-
-### Check All API JavaScript Files
-
-```cmd
-for /r src\APIs %f in (*.js) do @node --check "%f"
-```
-
-### Verify Application Route Loading
-
-```cmd
-node -e "require('./src/app');console.log('App routes loaded')"
-```
-
-Expected output:
-
-```text
-[Billing] mounted 24 route file(s) from src/APIs/*/routes/*.js
-App routes loaded
-```
-
-### Verify Exported Models
-
-```cmd
-node -e "const a=require('./src/models/TMF678_BillingPayment');const b=require('./src/models/TMF676_Payment');console.log('TMF678:',Object.keys(a));console.log('TMF676:',Object.keys(b))"
-```
-
-### Check Git Formatting Errors
-
-```cmd
-git diff --check
-```
-
-### Check Staged Formatting Errors
-
-```cmd
-git diff --cached --check
-```
-
-### View Changed Files
-
-```cmd
-git status --short
-```
-
----
-
-## Git Workflow
-
-Do not make feature changes directly on `dev`.
-
-### Update Local Development Branch
-
-```cmd
-git switch dev
-git pull origin dev
-git status
-```
-
-### Create a Feature Branch
-
-```cmd
-git switch -c <FeatureName>_Kumudu
-```
-
-### Stage Selected Files
-
-```cmd
-git add <file-or-folder>
-```
-
-### Verify Staged Changes
-
-```cmd
-git diff --cached --check
-git status --short
-```
-
-### Commit
-
-```cmd
-git commit -m "Describe the change"
-```
-
-### Push
-
-```cmd
-git push -u origin <FeatureName>_Kumudu
-```
-
-### Pull Request
-
-Create a pull request with:
-
-```text
-base: dev
-compare: <FeatureName>_Kumudu
-```
-
-After the pull request is reviewed and merged:
-
-```cmd
-git switch dev
-git pull origin dev
-git status
-```
-
-Delete the completed local branch:
-
-```cmd
-git branch -d <FeatureName>_Kumudu
-```
-
-Delete the completed remote branch when appropriate:
-
-```cmd
-git push origin --delete <FeatureName>_Kumudu
-```
-
----
-
-## Local DNS Workaround
-
-Some local environments may fail to resolve the MongoDB Atlas SRV address:
-
-```text
-querySrv ECONNREFUSED
-```
-
-A machine-specific DNS workaround may be temporarily added to `server.js`.
-
-This workaround is local-only and must not be committed.
-
-### Save the Local Workaround
-
-```cmd
-git stash push -m "Local DNS workaround" -- server.js
-```
-
-### View Available Stashes
-
-```cmd
-git stash list
-```
-
-### Restore the Workaround
-
-```cmd
-git stash apply "stash@{0}"
-```
-
-Use `git stash apply` instead of `git stash pop` when the workaround may be required again.
-
-### Confirm the Local Change
-
-```cmd
-git status --short
-```
-
-Expected local test state:
-
-```text
- M server.js
-```
-
-Before creating a commit, confirm that `server.js` is not staged.
-
----
-
-## Security Guidelines
-
-* Never commit `.env`.
-* Never commit access tokens.
-* Never include passwords in README files.
-* Never include database credentials in source code.
-* Never push machine-specific DNS changes.
-* Use environment variables for secrets.
-* Use Postman environment variables for access tokens.
-* Rotate any credential accidentally shared in a collection, report, screenshot, or chat.
-* Review staged changes before every commit.
-* Keep generated CTK reports out of source control unless the team specifically requires them.
-* Do not modify official CTK tests to produce a passing result.
-
----
-
-## Current Verification Status
-
-The following validations have been completed during development:
-
-* All 24 API route modules load successfully.
-* JavaScript syntax checks pass for API module files.
-* Direct service routes are available on port `3006`.
-* API Gateway routes are available on port `8080`.
-* MongoDB connectivity has been verified.
-* TMF678 CTK can execute through the local Newman runner.
-* TMF678 CTK can reach the service through the API Gateway.
-* TMF676 CTK configuration has been prepared.
-* The supplied TMF676 CTK requires Docker before it can be executed.
-* Six API folders and controller methods were aligned with the approved Excel method names.
-
----
-
-## License
-
-This project is maintained for the OmniChannel Service Hub billing and payment integration.
-
-Any TM Forum specifications, CTK packages, and related materials remain subject to their respective licenses and usage conditions.
+Use the generated HTML and JSON reports to inspect failures. CTK installation paths above are examples from the development setup; use your own extracted CTK folder when different.
+
+### Recorded verification — 27 October 2026
+
+| Check | Result |
+| --- | --- |
+| Business APIs | All 12 reported successfully tested in Postman. |
+| TMF678 CTK | 20 requests, 165 assertions, 0 failures. |
+| TMF676 CTK | 7 requests, 134 assertions, 0 failures. |
+
+These are results from the recorded development runs, not a claim of formal TM Forum certification. Assertion counts may vary with the resources present in the test database.
+
+## Current implementation boundaries
+
+- **eBill registration:** saves registration preferences. Real account ownership and OTP verification require the configured integration hook; the explicit development/test fallback bypasses real verification.
+- **OTP delivery:** mock responses identify delivery as `mock-not-sent`. No real message is sent by that mock.
+- **Invoice save (A144):** persists the source invoice record. Its final external invoice resource classification remains to be confirmed.
+- **Invoice update (A145):** the current mock returns `operationPerformed: false` and `state: "notPerformed"`; it does not update an invoice.
+- **Payment logs:** represent audit events, not evidence that a financial transaction settled.
+- **Standard payment/refund creation:** records resource requests; it does not move money through a payment gateway.
+- **Bill-on-demand creation:** records the request in progress; it does not generate a real bill PDF.
+- **Source integration:** seeded records and development fixtures are used where live backend integrations are not yet connected. Missing invoice numbers, PDFs, tax values or per-bill payment allocations are not fabricated.
+- **Production access:** configure the required account authorization integration (`app.locals.tmfAuthorizer`) and eBill ownership/OTP integration (`app.locals.billDeliveryGuard`) before enabling production workflows. Development mocks are not production integrations.
+
+## Troubleshooting
+
+| Problem | Check |
+| --- | --- |
+| `Cannot find module 'dotenv'` | Run `npm ci` in the project root. |
+| `MONGODB_URI is not set` | Confirm the root `.env` contains a valid connection string and start the server from that directory. |
+| MongoDB connection or Atlas SRV lookup fails | Check the connection string, Atlas network access and local DNS. A standalone seed process needs its own working DNS configuration. |
+| `401 Unauthorized` | Obtain a fresh token and confirm the configured JWT verification secret matches the authentication service. |
+| `403 Forbidden` | Check account authorization and ownership/OTP verification. |
+| `503` for guarded workflows | Configure the required integration hooks; for local samples only, check the documented development mock settings. |
+| CTK cannot connect | Check the running port and CTK base URL; use the Docker host address for the Docker-based kit. |
+| Empty resource lists | Check the target database and seed appropriate development fixtures where required. |
+
+## TM Forum schema attribution
+
+Embedded standard resource schemas are derived from the Apache-2.0 TM Forum TMF678 Customer Bill Management and TMF676 Payment Management specifications. See [LICENSE-TMF.txt](LICENSE-TMF.txt).
