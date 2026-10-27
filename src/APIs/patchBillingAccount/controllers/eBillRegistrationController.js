@@ -1,5 +1,5 @@
 const service = require('../services/eBillRegistrationService');
-const { success, failure, envelope, requiredInput } = require('../../../middleware/response.util');
+const { contractOne, success, failure, envelope, requiredInput } = require('../../../middleware/response.util');
 
 async function patchBillingAccount(req, res) {
   try {
@@ -25,10 +25,10 @@ async function patchBillingAccount(req, res) {
     }
     const record = await service.registerEBill(input);
     if (!record) throw new Error('Registration was not saved.');
-    return success(res, { message: 'Successfully Updated.' });
+    return contractOne(res,req,await require('../../retrieveBillingRequest/services/eBillStatusService').preference(input.accountNumber,input.eventSource));
   } catch (error) {
     const status = error.status || 500;
-    return failure(res, {
+    return require('../../../middleware/response.util').tmfFailure(res, {
       status, errorCode: `E${status}`,
       message: error.status ? error.message : 'Request failed.',
     });
@@ -36,3 +36,5 @@ async function patchBillingAccount(req, res) {
 }
 
 module.exports = { patchBillingAccount };
+
+module.exports.patchBillingAccount=require('../../../middleware/response.util').contractHandle('patchBillingAccount',module.exports.patchBillingAccount);
