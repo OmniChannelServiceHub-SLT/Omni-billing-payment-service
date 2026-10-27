@@ -15,3 +15,12 @@ async function checkEBillUserExistV2(accountNo, otpProvider) {
   return record;
 }
 module.exports = { checkEBillUserExistV2 };
+
+
+const { sltType }=require('../../../middleware/response.util');
+module.exports.validateDelivery=async (accountNo,provider)=>{
+ const row=await checkEBillUserExistV2(accountNo,provider);if(!row)return null;
+ return {...sltType('SLTBillDeliveryValidation'),billingAccount:{id:accountNo,'@referredType':'BillingAccount'},registered:row.userexist==='Y',reference:row.referenceNumber,
+ otpDelivery:row.userexist==='N' ? (provider?'sent':'mock-not-sent'):'not-required'};
+};
+

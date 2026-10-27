@@ -9,7 +9,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 
 const { tmfFailure } = require('./middleware/response.util');
-const isTmfPath = req => /^\/(?:tmf-api\/(?:customerBillManagement|paymentManagement|payment)\/v4|payment\/v4)(?:\/|$)/.test(req.path);
+const isTmfPath = req => /^\/(?:tmf-api\/|internal-api\/billingPayment\/v4(?:\/|$)|payment\/v4(?:\/|$))/.test(req.path);
 
 const app = express();
 
@@ -30,9 +30,17 @@ app.use(
 );
 
 app.use(morgan('combined'));
+app.use((req,res,next)=>{if(/^\/(?:tmf-api|api|slt\/ext\/api|internal-api\/billingPayment)\//.test(req.path))req.tmfMode=true;next();});
 
 app.use(express.json({ limit: '1mb', type: ['application/json', 'application/*+json'] }));
 app.use(express.urlencoded({ extended: true }));
+
+// Published SLT extension schemas. Their names intentionally distinguish them from standard TMF resources.
+app.get('/internal-api/billingPayment/v4/schema/:type',(req,res)=>{
+ const schema=require('./middleware/response.util').extensionSchemas[req.params.type];
+ if(!schema)return tmfFailure(res,{status:404,message:'Unknown extension schema.'});
+ return res.type('application/schema+json').json(schema);
+});
 
 // ---------------------------------------------------------
 // Health Check

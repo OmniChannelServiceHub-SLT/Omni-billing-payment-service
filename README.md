@@ -1,38 +1,35 @@
-# Omni Billing & Payment Service — latest requirements
+# Billing & Payment — 678 / 676 response update
 
-This version uses the uploaded project's existing files and directory layout. The ten API folder names follow column E of `ominichannelapiList.xlsx`. Controller/service/route filenames retain the original names. The two existing model files remain under `src/models`. No mapper files, contract file, test folder, seed-script folder, Gateway patch folder or new helper files are included.
+This version supersedes the earlier package that introduced Account Management routes. There are no accountManagement routes, account models, or extra account fixtures here.
 
-## Run
+## Apply
 
-1. Use a separate extracted folder while comparing with the existing repository. The `src/APIs` directory must contain only these ten new folders when you copy it to the feature branch. Do not leave the old API directories alongside them.
-2. Run `npm ci`.
-3. Keep `.env` private. Set `MONGODB_URI` to your development database and `JWT_ACCESS_SECRET` to the same access secret used by IAM. The uploaded `.env` is retained unchanged.
-4. Run `npm run seed` if you want the Excel samples. This existing command now calls code inside `src/config/db.js`; it inserts missing records only and does not overwrite existing records, remove collections or reset registrations.
-5. Run `npm start`.
-6. Import the separately supplied Postman JSON. Set `baseUrl=http://localhost:3006` and `accessToken` to a valid IAM access token. Optional login defaults to the uploaded Gateway's v4 IAM path; adjust `loginPath` if your running Gateway uses v1 instead.
+Keep your existing repository and private `.env`. Stop the billing server. Create a new branch from your current dev, then copy this folder's contents over the existing project. Keep `.git`, `.env` and your own credentials. The `src/APIs` directory still contains the same 12 API folders and the controller/route filenames are unchanged. No mapper files or new dependencies are added.
 
-A21 `patchBillingAccount` is POST with query parameters. A144 `createConnection` is POST with a JSON body. The other eight APIs are GET. Responses retain the latest Excel's source envelopes; the folder name does not change the HTTP method or response schema.
+```cmd
+npm ci
+node server.js
+```
 
-## Local behavior
+Your existing seeded database can be reused. For a new development database use `npm run seed`. Keep the existing MONGODB_URI and JWT_ACCESS_SECRET. The existing development settings `NODE_ENV=development`, `OTP_MODE=mock`, `INTERIM_MODE=mock` and optional `TMF_DEMO_DATA=true` behave as before. If the standalone seed process has an Atlas DNS failure, use the same DNS workaround already used in the project.
 
-Reads use the original Mongoose model collections. A21 persists eBill preferences; A22/A23 read the resulting preferences for the same account and telephone before falling back to their original status collections. A144 saves/updates the invoice package record. No live SLT upstream has been configured.
+Import the matching `Billing_Payment_12_Resource_Responses.postman_collection.json` as a new collection. It contains Setup (4 requests) and exactly 12 API folders. Enter your credentials/accessToken locally. Billing URLs are literal http://localhost:3006; no baseUrl variable is used.
 
-A98 new-user behavior returns 501 until an OTP provider is connected. For local sample testing only, add `OTP_MODE=mock` to `.env` and restart; set collection `otpMode=mock`. The response contains `x-otp-mode: mock`; no real OTP is sent. Mock mode is disabled when NODE_ENV=production. A live provider can be injected as `app.locals.otpProvider` with an async `send` method.
+## Response change
 
-Use a development database for these tests. Final account ownership checks and OTP verification before preference changes still need the team's integration rules. CTK is deferred; the TMF numbers in Excel are assignments and do not certify these source envelopes.
+The existing business methods, query/body contracts and team-style 678/676 URLs are retained. Successful responses are resource objects/arrays instead of the SLT isSuccess/dataBundle/errorMessege envelope. They use actual source identifiers, hrefs, types, account references and numeric Money values. Extra business-specific fields are declared SLT extensions with published schema URLs. Errors use code, reason, message and status.
 
-## Source details
+A145 retains its existing interim internal-api path. Its mock returns operationPerformed=false; no real invoice update is claimed. OTP mock responses say mock-not-sent. No fake invoice number, PDF, tax, paid state or allocated per-bill balance is manufactured from missing source information. Payment logs remain audit events rather than invented performed Payment records. The BillStatus sample has reversed email/mobile labels; the response classifies those contact values by their content.
 
-- A114 uses FTTH_162 from the endpoint and output; its input example says FTTH_102. Only the truncated sample's JSON syntax is repaired, and its absent errorCode is not invented.
-- A147 uses the endpoint's account/telephone pair; its input example has a different pair. Its swapped email/mobile source values are retained.
-- A22 uses its explicit input pair to match A21's sample.
-- A144's missing opening output brace is repaired.
-- Interim/incomplete A89, A90, A115, A136, A145, A146, A149, A151, A158, A166 and A168 are excluded.
+This is the requested response-format update. The business URL aliases are custom SLT operations within the existing service; putting them under a TMF-style prefix does not make each one an official standard TMF operation. Existing standard customerBill, appliedCustomerBillingRate, customerBillOnDemand, payment and refund endpoints remain separate and unchanged. Their fixture CTK results do not certify the custom business operations.
 
-## Git workflow
+## Local verification
 
-Preserve uncommitted changes first. With a clean working tree, create an archive branch from current dev, then an implementation branch. Moving/replacing files in a new commit does not erase old commits. No history rewrite or force push is needed. For one API per PR, merge shared model/app/middleware/config changes first and then add the provided API folders on individual branches.
+- primary: 12 requests, 37 assertions, 0 failures.
+- TMF678: 20 requests, 133 assertions, 0 failures.
+- TMF676: 7 requests, 111 assertions, 0 failures.
+- 89 resource/schema/href/auth/error/mock checks passed against a fresh local MongoDB using development fixtures.
 
-## Verification
+Real OTP delivery, source backend integration and confirmed A144/A145 invoice classification remain outside this response-only change. Production authorization and ownership/OTP hooks remain required. No GitHub changes have been pushed by this delivery.
 
-46 local tests passed. The separate collection was executed with 20 HTTP requests and 43 script assertions, covering mock and disabled OTP modes. HTTP testing was performed outside this delivery folder so no extra test files are shipped. It tests the actual controllers/services against an in-memory replacement for Mongoose queries, not a live MongoDB server. Local IAM login, live MongoDB, SLT upstream and CTK testing remain to be run in your environment.
+Embedded standard schemas are derived from the Apache-2.0 TM Forum TMF678_CustomerBill and TMF676_PaymentManagement specifications. See LICENSE-TMF.txt.

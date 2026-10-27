@@ -20,3 +20,6 @@ async function listBillPresentation(req, res) {
 }
 
 module.exports = { listBillPresentation };
+
+const { contractHandle,contractOne,contractList }=require('../../../middleware/response.util');
+module.exports.listBillPresentation=contractHandle('listBillPresentation',async(req,res)=>{const input=requiredInput(req.query,[]);return contractList(res,req,await service.mediaList());});

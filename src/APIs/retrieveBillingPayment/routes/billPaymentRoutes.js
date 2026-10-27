@@ -10,3 +10,6 @@ router.get('/api/AccountOMNI/BillPaymentRequest', auth, controller.retrieveBilli
 router.get('/tmf-api/paymentManagement/v4/bill-payment', auth, controller.retrieveBillingPayment);
 
 module.exports = router;
+
+const {contractHandle,contractOne}=require('../../../middleware/response.util');
+router.get('/tmf-api/paymentManagement/v4/bill-payment/:id',auth,contractHandle('retrieveBillingPayment',async(req,res)=>{const service=require('../services/billPaymentService');const data=await(async()=>{const [accountNo,telephoneNo]=req.params.id.split(':');return service.getPaymentSummary(telephoneNo,accountNo);})();return contractOne(res,req,data);}));
