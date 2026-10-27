@@ -34,3 +34,8 @@ module.exports.createTmfPayment = async (req, res) => tmfOne(res, req, 'payment'
 module.exports.listTmfRefund = async (req, res) => tmfList(res, req, 'refund', await service.listTmfRefund(req.query));
 module.exports.getTmfRefund = async (req, res) => tmfOne(res, req, 'refund', await service.getTmfRefund(req.params.id, req.query));
 module.exports.createTmfRefund = async (req, res) => tmfOne(res, req, 'refund', await service.createTmfRefund(req.body, req.identity), 201);
+
+
+
+const { contractHandle,contractOne,contractList }=require('../../../middleware/response.util');
+module.exports.listPayment=contractHandle('listPayment',async(req,res)=>{const input=requiredInput(req.query,["orderreff"]);return contractList(res,req,await service.listAudit(input.orderreff));});
